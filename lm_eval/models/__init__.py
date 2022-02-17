@@ -2,6 +2,7 @@ from . import gpt2
 from . import gpt3
 from . import dummy
 from . import xglm
+from . import bigscience
 
 MODEL_REGISTRY = {
     "hf": gpt2.HFLM,
@@ -9,6 +10,7 @@ MODEL_REGISTRY = {
     "gpt3": gpt3.GPT3LM,
     "dummy": dummy.DummyLM,
     "XGLM": xglm.XGLM,
+    "bigscience":bigscience.BigScience,
 }
 
 
