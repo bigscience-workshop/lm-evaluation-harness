@@ -53,6 +53,7 @@ from . import asdiv
 from . import gsm8k
 from . import storycloze
 from . import hans
+from . import crows_pairs_multilingual
 
 # from . import e2e_nlg_cleaned
 
@@ -285,6 +286,8 @@ TASK_REGISTRY = {
     "blimp_wh_vs_that_no_gap_long_distance": blimp.BlimpWhVsThatNoGapLongDistance,
     "blimp_wh_vs_that_with_gap": blimp.BlimpWhVsThatWithGap,
     "blimp_wh_vs_that_with_gap_long_distance": blimp.BlimpWhVsThatWithGapLongDistance,
+    "crows_pairs_english": crows_pairs_multilingual.CrowsPairsEnglish,
+    "crows_pairs_french": crows_pairs_multilingual.CrowsPairsFrench,
     # Requires manual download of data.
     # "storycloze_2016": storycloze.StoryCloze2016,
     # "storycloze_2018": storycloze.StoryCloze2018,
