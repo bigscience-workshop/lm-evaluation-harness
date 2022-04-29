@@ -5,16 +5,61 @@ import lm_eval.base
 import sacrebleu
 from promptsource.templates import DatasetTemplates
 
-from . import (anli, arc, arithmetic, asdiv, blimp, cbt, coqa, drop, gem_mlsum,
-               gem_totto, gem_webnlg, gem_xsum, glue, gsm8k, hans, headqa,
-               hellaswag, hendrycks_ethics, hendrycks_math, hendrycks_test,
-               lambada, lambada_cloze, lambada_multilingual, logiqa, mathqa,
-               mc_taco, mutual, naturalqs, openbookqa, pile, piqa, prost,
-               pubmedqa, qa4mre, qasper, quac, race, sat, sciq, squad,
-               storycloze, superglue, translation, triviaqa, truthfulqa,
-               unscramble, webqs, wikitext, winogrande, wsc273)
-
-# from . import e2e_nlg_cleaned
+from . import superglue
+from . import glue
+from . import arc
+from . import coqa
+from . import race
+from . import webqs
+from . import anli
+from . import wsc273
+from . import winogrande
+from . import quac
+from . import hellaswag
+from . import openbookqa
+from . import squad
+from . import naturalqs
+from . import sat
+from . import arithmetic
+from . import lambada
+from . import race
+from . import piqa
+from . import prost
+from . import mc_taco
+from . import triviaqa
+from . import pubmedqa
+from . import sciq
+from . import webqs
+from . import qasper
+from . import qa4mre
+from . import translation
+from . import headqa
+from . import mathqa
+from . import hendrycks_ethics
+from . import drop
+from . import unscramble
+from . import logiqa
+from . import hendrycks_test
+from . import hendrycks_math
+from . import cbt
+from . import lambada_cloze
+from . import pile
+from . import wikitext
+from . import lambada_multilingual
+from . import mutual
+from . import truthfulqa
+from . import blimp
+from . import asdiv
+from . import gsm8k
+from . import storycloze
+from . import hans
+from . import gem_webnlg
+from . import gem_xsum
+from . import gem_mlsum
+from . import wino_bias
+from . import e2e_nlg_cleaned
+from . import gem_asset_turk
+from . import crows_pairs_multilingual
 
 ########################################
 # Translation tasks
@@ -68,11 +113,12 @@ TASK_REGISTRY = {
     "wsc": superglue.SGWinogradSchemaChallenge,
     # Order by benchmark/genre?
     "coqa": coqa.CoQA,
-    "GEM/web_nlg": gem_webnlg.WebNLG,
     "drop": drop.DROP,
     "lambada": lambada.LAMBADA,
     "lambada_cloze": lambada_cloze.LAMBADA_cloze,
+    **gem_webnlg.construct_tasks(),
     # multilingual lambada
+    **gem_asset_turk.construct_tasks(),
     **lambada_multilingual.construct_tasks(),
     "wikitext": wikitext.WikiText,
     # "cbt-cn": cbt.CBTCN, # disabled pending context length fix
@@ -83,7 +129,7 @@ TASK_REGISTRY = {
     # Science related
     "pubmedqa": pubmedqa.Pubmed_QA,
     "sciq": sciq.SciQ,
-    # "e2e_nlg_cleaned": e2e_nlg_cleaned.E2E_NLG_Cleaned,
+    "e2e_nlg_cleaned": e2e_nlg_cleaned.E2E_NLG_Cleaned,
     "qasper": qasper.QASPER,
     "qa4mre_2011": qa4mre.QA4MRE_2011,
     "qa4mre_2012": qa4mre.QA4MRE_2012,
@@ -266,6 +312,16 @@ TASK_REGISTRY = {
     # GEM/totto
     "gem_totto": gem_totto.GEMTOTTO,
     "gem_xsum_challenge_sample": gem_totto.GEMTOTTOChallgeSample,
+
+    # WinoBias
+    "wino_bias_type1_pro": wino_bias.WinoBiasType1Pro,
+    "wino_bias_type1_anti": wino_bias.WinoBiasType1Anti,
+    "wino_bias_type2_pro": wino_bias.WinoBiasType2Pro,
+    "wino_bias_type2_anti": wino_bias.WinoBiasType2Anti,
+
+    # Crows-Pairs
+    "crows_pairs_english": crows_pairs_multilingual.CrowsPairsEnglish,
+    "crows_pairs_french": crows_pairs_multilingual.CrowsPairsFrench,
 }
 
 
