@@ -56,6 +56,7 @@ from . import hans
 from . import gem_webnlg
 from . import gem_xsum
 from . import gem_mlsum
+from . import gem_totto
 from . import wino_bias
 from . import e2e_nlg_cleaned
 from . import gem_asset_turk
