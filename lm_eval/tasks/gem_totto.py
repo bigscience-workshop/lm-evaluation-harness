@@ -46,9 +46,6 @@ class GEMTOTTOBase(PromptSourceTask):
     def has_test_docs(self):
         return True
 
-    def stopping_criteria(self):
-        return "."
-
     def training_docs(self):
         if self.has_training_docs():
             if self._training_docs is None:
