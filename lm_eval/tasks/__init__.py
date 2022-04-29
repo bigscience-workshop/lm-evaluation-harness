@@ -1,61 +1,19 @@
-from promptsource.templates import DatasetTemplates
 from pprint import pprint
 from typing import List, Union
 
-import sacrebleu
 import lm_eval.base
+import sacrebleu
+from promptsource.templates import DatasetTemplates
 
-from . import superglue
-from . import glue
-from . import arc
-from . import coqa
-from . import race
-from . import webqs
-from . import anli
-from . import wsc273
-from . import winogrande
-from . import quac
-from . import hellaswag
-from . import openbookqa
-from . import squad
-from . import naturalqs
-from . import sat
-from . import arithmetic
-from . import lambada
-from . import race
-from . import piqa
-from . import prost
-from . import mc_taco
-from . import triviaqa
-from . import pubmedqa
-from . import sciq
-from . import webqs
-from . import qasper
-from . import qa4mre
-from . import translation
-from . import headqa
-from . import mathqa
-from . import hendrycks_ethics
-from . import drop
-from . import unscramble
-from . import logiqa
-from . import hendrycks_test
-from . import hendrycks_math
-from . import cbt
-from . import lambada_cloze
-from . import pile
-from . import wikitext
-from . import lambada_multilingual
-from . import mutual
-from . import truthfulqa
-from . import blimp
-from . import asdiv
-from . import gsm8k
-from . import storycloze
-from . import hans
-from . import gem_webnlg
-from . import gem_xsum
-from . import gem_mlsum
+from . import (anli, arc, arithmetic, asdiv, blimp, cbt, coqa, drop, gem_mlsum,
+               gem_totto, gem_webnlg, gem_xsum, glue, gsm8k, hans, headqa,
+               hellaswag, hendrycks_ethics, hendrycks_math, hendrycks_test,
+               lambada, lambada_cloze, lambada_multilingual, logiqa, mathqa,
+               mc_taco, mutual, naturalqs, openbookqa, pile, piqa, prost,
+               pubmedqa, qa4mre, qasper, quac, race, sat, sciq, squad,
+               storycloze, superglue, translation, triviaqa, truthfulqa,
+               unscramble, webqs, wikitext, winogrande, wsc273)
+
 # from . import e2e_nlg_cleaned
 
 ########################################
@@ -288,19 +246,16 @@ TASK_REGISTRY = {
     "blimp_wh_vs_that_no_gap_long_distance": blimp.BlimpWhVsThatNoGapLongDistance,
     "blimp_wh_vs_that_with_gap": blimp.BlimpWhVsThatWithGap,
     "blimp_wh_vs_that_with_gap_long_distance": blimp.BlimpWhVsThatWithGapLongDistance,
-    
-    #GEM/mlsum
-    "mlsum_es":gem_mlsum.GEMMLSUMEs,
-    "mlsum_de":gem_mlsum.GEMMLSUMDe,
-    "mlsum_es_covid_challenge_set":gem_mlsum.GEMMLSUMEsChallgeTestCovid,
-    "mlsum_de_covid_challenge_set":gem_mlsum.GEMMLSUMDeChallgeTestCovid,
-
+    # GEM/mlsum
+    "mlsum_es": gem_mlsum.GEMMLSUMEs,
+    "mlsum_de": gem_mlsum.GEMMLSUMDe,
+    "mlsum_es_covid_challenge_set": gem_mlsum.GEMMLSUMEsChallgeTestCovid,
+    "mlsum_de_covid_challenge_set": gem_mlsum.GEMMLSUMDeChallgeTestCovid,
     # Requires manual download of data.
     # "storycloze_2016": storycloze.StoryCloze2016,
     # "storycloze_2018": storycloze.StoryCloze2018,
     # "sat": sat.SATAnalogies,
-
-    #GEM/xum
+    # GEM/xum
     "gem_xsum": gem_xsum.GEMXSUM,
     "gem_xsum_challenge_sample": gem_xsum.GEMXSUMChallgeSample,
     "gem_xsum_challenge_test_backtranslation": gem_xsum.GEMXSUMChallgeTestBacktranslation,
@@ -308,6 +263,9 @@ TASK_REGISTRY = {
     "gem_xsum_challenge_test_bfp_05": gem_xsum.GEMXSUMChallgeTestBFP05,
     "gem_xsum_challenge_test_nopunc": gem_xsum.GEMXSUMChallgeTestNopunc,
     "gem_xsum_challenge_test_covid": gem_xsum.GEMXSUMChallgeTestCovid,
+    # GEM/totto
+    "gem_totto": gem_totto.GEMTOTTO,
+    "gem_xsum_challenge_sample": gem_totto.GEMTOTTOChallgeSample,
 }
 
 
