@@ -6,7 +6,7 @@ This is the ToTTo subset of the GEM benchmark.
 ToTTo is an open-domain English table-to-text dataset with over 120,000 training examples that proposes a controlled generation task: given a Wikipedia table and a set of highlighted table cells, produce a one-sentence description. To obtain generated targets that are natural but also faithful to the source table, the authors introduce a dataset construction process where annotators directly revise existing candidate sentences from Wikipedia. The authors present systematic analyses of the dataset and annotation process as well as results achieved by several state-of-the-art baselines. While usually fluent, existing methods often hallucinate phrases that are not supported by the table, suggesting that this dataset can serve as a useful research benchmark for high-precision conditional text generation.
 Homepage: https://github.com/google-research-datasets/totto
 """
-from lm_eval.base import PromptSourceTask, Task, rf
+from lm_eval.base import PromptSourceTask
 
 _CITATION = """
 @inproceedings{parikh-etal-2020-totto,
@@ -44,7 +44,8 @@ class GEMTOTTOBase(PromptSourceTask):
         return True
 
     def has_test_docs(self):
-        return True
+        # NOTE: The test data do not have targets so ignore them.
+        return False
 
     def training_docs(self):
         if self.has_training_docs():
@@ -56,9 +57,10 @@ class GEMTOTTOBase(PromptSourceTask):
         if self.has_validation_docs():
             return self.dataset["validation"]
 
-    def test_docs(self):
-        if self.has_test_docs():
-            return self.dataset["test"]
+    def invalid_doc_for_prompt(self, doc) -> bool:
+        """The QA prompts are not applicable to all the examples, we want to filter these out."""
+        # TODO: This is a hack, we should have a better way to filter out invalid examples.
+        return self.prompt.name in ['guess the table section text', 'guess the table section title']
 
 
 class GEMTOTTO(GEMTOTTOBase):
