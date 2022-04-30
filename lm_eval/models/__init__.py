@@ -5,6 +5,8 @@ from . import mgpt
 from . import t5
 from . import t0
 from . import dummy
+from . import xglm
+from . import bigscience
 
 MODEL_REGISTRY = {
     "hf": gpt2.HFLM,
@@ -16,6 +18,8 @@ MODEL_REGISTRY = {
     "mt5": t5.T5LM,
     "t0": t0.T0LM,
     "dummy": dummy.DummyLM,
+    "XGLM": xglm.XGLM,
+    "bigscience":bigscience.BigScience,
 }
 
 
