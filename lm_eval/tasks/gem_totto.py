@@ -62,6 +62,9 @@ class GEMTOTTOBase(PromptSourceTask):
         # TODO: This is a hack, we should have a better way to filter out invalid examples.
         return self.prompt.name in ['guess the table section text', 'guess the table section title']
 
+    def max_generation_length(self):
+        return 64
+
 
 class GEMTOTTO(GEMTOTTOBase):
     """this is for train/validation/test"""
