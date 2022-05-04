@@ -33,7 +33,7 @@ class T0LM(BaseLM):
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(pretrained)
         # self.max_length = self.MAX_INP_LENGTH
 
-        self.batch_size = int(batch_size)
+        self._batch_size = int(batch_size)
 
     @classmethod
     def create_from_arg_string(cls, arg_string, additional_config={}):
@@ -197,4 +197,12 @@ class T0LM(BaseLM):
                 stopping_criteria=stopping_criteria,
                 do_sample=False,
             )
-        return generations[0]
+        generations = generations[0]  # batch size is always 1
+        
+        if generations[0].item() == self.tokenizer.pad_token_id:
+            generations = generations[1:]  # ignore pad token at the beginning
+        
+        if generations[-1].item() == self.tokenizer.eos_token_id:
+            generations = generations[:-1]  # ignore eos token at the end
+        
+        return generations

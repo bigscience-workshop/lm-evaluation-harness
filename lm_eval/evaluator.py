@@ -9,9 +9,10 @@ import lm_eval.tasks
 import lm_eval.base
 import promptsource
 import numpy as np
+from tqdm import tqdm
 
 from promptsource.templates import DatasetTemplates
-from lm_eval.utils import positional_deprecated, run_task_tests
+from lm_eval.utils import positional_deprecated, run_task_tests, set_seed
 
 
 @positional_deprecated
@@ -27,6 +28,7 @@ def simple_evaluate(
     bootstrap_iters=100000,
     description_dict=None,
     check_integrity=False,
+    seed=1234,
 ):
     """Instantiate and evaluate a model on a list of tasks.
 
@@ -56,9 +58,7 @@ def simple_evaluate(
     :return
         Dictionary of results
     """
-    random.seed(1234)
-    np.random.seed(1234)
-
+    set_seed(1234)
     assert tasks != [], "No tasks specified"
 
     if isinstance(model, str):
@@ -71,8 +71,6 @@ def simple_evaluate(
         assert isinstance(model, lm_eval.base.LM)
         lm = model
 
-    # TODO: Hard-code turning off cache while testing. Remove once testing is completed.
-    no_cache = True
     if not no_cache:
         lm = lm_eval.base.CachingLM(
             lm,
@@ -195,8 +193,10 @@ def evaluate(
             else ""
         )
 
+        print(f"Constructing '{task_prompt_name}' contexts and requests")
+        pbar_limit = len(task_docs) if not limit else limit
         for doc_id, (original_doc_id, doc) in enumerate(
-            itertools.islice(task_docs, 0, limit)
+            tqdm(itertools.islice(task_docs, 0, limit), total=pbar_limit)
         ):
             if task.invalid_doc_for_prompt(doc):
                 continue
