@@ -1,8 +1,9 @@
-from promptsource.templates import DatasetTemplates
 from pprint import pprint
 from typing import List, Union
 
 import lm_eval.base
+import sacrebleu
+from promptsource.templates import DatasetTemplates
 
 from . import anli
 from . import blimp
@@ -13,6 +14,7 @@ from . import e2e_nlg_cleaned
 from . import flores_101
 from . import gem_asset_turk
 from . import gem_mlsum
+from . import gem_totto
 from . import gem_webnlg
 from . import gem_xsum
 from . import glue
@@ -165,7 +167,10 @@ TASK_REGISTRY = {
     "gem_xsum_challenge_test_bfp_05": gem_xsum.GEMXSUMChallgeTestBFP05,
     "gem_xsum_challenge_test_nopunc": gem_xsum.GEMXSUMChallgeTestNopunc,
     "gem_xsum_challenge_test_covid": gem_xsum.GEMXSUMChallgeTestCovid,
-    # LAMA
+    # GEM/totto
+    "gem_totto": gem_totto.GEMTOTTO,
+    "gem_xsum_challenge_sample": gem_totto.GEMTOTTOChallgeSample,
+    #LAMA
     "lama-trex": lama.Trex,
     "lama-squad": lama.Squad,
     "lama-google_re": lama.google_re,
