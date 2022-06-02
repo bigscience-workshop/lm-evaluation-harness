@@ -11,6 +11,7 @@ from . import crows_pairs_multilingual
 from . import drop
 from . import e2e_nlg_cleaned
 from . import flores_101
+from . import gad
 from . import gem_asset_turk
 from . import gem_mlsum
 from . import gem_webnlg
@@ -158,6 +159,9 @@ TASK_REGISTRY = {
     # "storycloze_2016": storycloze.StoryCloze2016,
     # "storycloze_2018": storycloze.StoryCloze2018,
     # "sat": sat.SATAnalogies,
+
+    # GAD
+    "gad": gad.GadFold0Text,
     
     # GEM/xum
     "gem_xsum": gem_xsum.GEMXSUM,
