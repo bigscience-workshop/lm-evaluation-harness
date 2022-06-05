@@ -27,7 +27,8 @@ from . import wino_bias
 from . import wmt
 from . import cnn_dailymail
 from . import diabla
-
+from . import gad
+from . import biosses
 
 ########################################
 # All tasks
@@ -199,6 +200,23 @@ TASK_REGISTRY = {
     
     # SciTail
     "scitail": scitail.SciTailTE,
+
+    # All GAD Datasets
+    "gad0": gad.GadFold0Text,
+    "gad1": gad.GadFold1Text,
+    "gad2": gad.GadFold2Text,
+    "gad3": gad.GadFold3Text,
+    "gad4": gad.GadFold4Text,
+    "gad5": gad.GadFold5Text,
+    "gad6": gad.GadFold6Text,
+    "gad7": gad.GadFold7Text,
+    "gad8": gad.GadFold8Text,
+    "gad9": gad.GadFold9Text,
+    "gad": gad.GadBlurbText,
+
+    # Biosses
+    "biosses": biosses.BiossesPairs,
+
 }
 
 
