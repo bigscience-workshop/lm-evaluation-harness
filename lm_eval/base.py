@@ -21,6 +21,8 @@ from lm_eval.metrics import (
 from lm_eval import utils, metrics
 from abc import abstractmethod
 
+from lm_eval.metric_impls import comet as comet_impl
+
 
 class LM(abc.ABC):
     def __init__(self):
@@ -612,7 +614,7 @@ class PromptSourceTask(Task):
     """
 
     CONFIGURED_RANKED_CHOICE_PS_METRICS = set(["Accuracy"])
-    CONFIGURED_GENERATION_PS_METRICS = set(["BLEU", "ROUGE", "SARI"])
+    CONFIGURED_GENERATION_PS_METRICS = set(["BLEU", "ROUGE", "SARI", "COMET"])
     SPLIT = None
 
     def __init__(
@@ -762,6 +764,10 @@ class PromptSourceTask(Task):
                     out = {**out, **rouge_scores}
                 elif metric == "SARI":
                     out["sari"] = metrics.sari(self.doc_to_rawtext(doc), pred, target)
+                elif metric == "COMET":
+                    out["comet"] = comet_impl.comet_process_results(
+                        self.doc_to_rawtext(doc), pred, target
+                    )
 
         # TODO: Wrap process results s.t. override impl do not
         # override the save examples.
@@ -801,6 +807,9 @@ class PromptSourceTask(Task):
                 out["rougeLsum_fmeasure"] = True
             elif metric == "SARI":
                 out["sari"] = True
+            if metric == "COMET":
+                out["comet"] = True
+
         return out
 
     def aggregation(self):
@@ -830,6 +839,9 @@ class PromptSourceTask(Task):
                 out["rougeLsum_fmeasure"] = mean
             elif metric == "SARI":
                 out["sari"] = mean
+            if metric == "COMET":
+                out["comet"] = comet_impl.comet_aggregation
+
         return out
 
     def fewshot_examples(self, k, rnd):
@@ -966,6 +978,20 @@ class PromptSourceTask(Task):
 
 
 class TranslationTask(PromptSourceTask):
+    def __init__(
+        self,
+        data_dir=None,
+        cache_dir=None,
+        download_mode=None,
+        prompt=None,
+        save_examples=True,
+    ):
+        super().__init__(data_dir, cache_dir, download_mode, prompt, save_examples)
+
+        # TODO: Add check that language is valid for COMET
+        # IF NOT, update the
+        if "COMET" not in self.prompt.metadata.metrics:
+            self.prompt.metadata.metrics.append("COMET")
 
     # Language specific functions.
     @classmethod
@@ -1039,6 +1065,13 @@ class TranslationTask(PromptSourceTask):
                 rouge_scores = utils.flatten(rouge_scores)
                 # Merge all the rouge-type scores into the `out` dict.
                 out = {**out, **rouge_scores}
+            elif metric == "COMET":
+                # NOTE: If you use COMET, you must implement doc_to_rawtext
+                # which here serves as the original doc without the prompt added
+                # to it.
+                out["comet"] = comet_impl.comet_process_results(
+                    self.doc_to_rawtext(doc), pred, target
+                )
 
         # TODO: Wrap process results s.t. override impl do not
         # override the save examples.

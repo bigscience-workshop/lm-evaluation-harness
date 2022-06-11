@@ -34,9 +34,12 @@ class WMTBase(TranslationTask):
     def max_generation_length(self) -> typing.Optional[int]:
         return 64
 
+    def doc_to_rawtext(self, doc):
+        source = self._get_src_ref_codes(self.prompt.name)[0]
+        return doc["translation"][source]
+
 
 # WMT 2014
-
 class WMT14Base(WMTBase):
     DATASET_PATH = "wmt14"
 
@@ -77,5 +80,5 @@ def create_year_tasks(year_classes) -> typing.Dict[str, WMTBase]:
     for task_class in year_classes:
         benchmark = task_class.DATASET_PATH
         lang_pair = task_class.DATASET_NAME.replace("-", "_")
-        tasks[f'{benchmark}_{lang_pair}'] = task_class
+        tasks[f"{benchmark}_{lang_pair}"] = task_class
     return tasks
