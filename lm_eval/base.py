@@ -626,6 +626,7 @@ class PromptSourceTask(Task):
         super().__init__(data_dir, cache_dir, download_mode)
         self.prompt = prompt
         self.save_examples = save_examples
+        self.dataset = self.dataset.filter(lambda doc: not self.invalid_doc_for_prompt(doc))
 
     def stopping_criteria(self) -> Optional[str]:
         """

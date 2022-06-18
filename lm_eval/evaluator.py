@@ -199,9 +199,6 @@ def evaluate(
         for doc_id, (original_doc_id, doc) in enumerate(
             tqdm(itertools.islice(task_docs, 0, limit), total=pbar_limit)
         ):
-            if task.invalid_doc_for_prompt(doc):
-                continue
-
             docs[(task_prompt_name, doc_id)] = doc
             ctx, fewshotex_logging_info = task.fewshot_context(
                 doc=doc, num_fewshot=num_fewshot, rnd=rnd, description=description
@@ -229,7 +226,7 @@ def evaluate(
         #       solution. we could also implement some kind of auto-grouping here;
         #       they should end up next to each other.
 
-        print("Running", reqtype, "requests")
+        print(f"\nRunning all `{reqtype}` requests")
         resps = getattr(lm, reqtype)([req.args for req in reqs])
         resps = [
             x if req.index is None else x[req.index] for x, req in zip(resps, reqs)
