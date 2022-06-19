@@ -626,7 +626,6 @@ class PromptSourceTask(Task):
         super().__init__(data_dir, cache_dir, download_mode)
         self.prompt = prompt
         self.save_examples = save_examples
-        self.dataset = self.dataset.filter(lambda doc: not self.invalid_doc_for_prompt(doc))
 
     def stopping_criteria(self) -> Optional[str]:
         """
@@ -839,8 +838,21 @@ class PromptSourceTask(Task):
         return self._get_fewshot_examples(self._training_docs, k, rnd)
 
     def _get_fewshot_examples(self, docs, k, rnd):
-        fewshot_idx = rnd.sample(list(np.arange(len(docs))), k)
-        return [docs[idx] for idx in fewshot_idx], [int(idx) for idx in fewshot_idx]
+        """Returns random k examples from the list of documents."""
+        indices = list(np.arange(len(docs)))
+        rnd.shuffle(indices)
+        
+        i = 0
+        fewshot_examples, fewshot_idx = [], []
+        for rnd_idx in indices:
+            if i >= k:  # Break when we have enough examples.
+                break
+            if self.invalid_doc_for_prompt(docs[rnd_idx]):
+                continue
+            fewshot_idx.append(int(rnd_idx))
+            fewshot_examples.append(docs[rnd_idx])
+            i += 1
+        return fewshot_examples, fewshot_idx
 
     @utils.positional_deprecated
     def fewshot_context(

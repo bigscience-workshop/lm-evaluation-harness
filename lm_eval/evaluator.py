@@ -188,6 +188,9 @@ def evaluate(
         rnd.seed(42)
         rnd.shuffle(task_docs)
 
+        print(f"Filtering '{task_prompt_name}' for invalid documents")
+        task_docs = filter(lambda idoc: not task.invalid_doc_for_prompt(idoc[1]), task_docs)
+
         description = (
             description_dict[task_prompt_name]
             if description_dict and task_prompt_name in description_dict
