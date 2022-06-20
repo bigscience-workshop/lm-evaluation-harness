@@ -1,6 +1,8 @@
 import collections
 import itertools
-import random
+import json
+import logging
+import numpy as np
 
 import lm_eval.metrics
 import lm_eval.models
@@ -9,8 +11,6 @@ import lm_eval.base
 from tqdm import tqdm
 
 from lm_eval.utils import positional_deprecated, run_task_tests, set_seed
-
-import logging, json
 
 
 @positional_deprecated
@@ -182,14 +182,20 @@ def evaluate(
         else:
             raise RuntimeError("Task has neither test_docs nor validation_docs")
 
-        # deterministically shuffle docs and chop off the first `limit` because sometimes docs are in some kind of order
-        task_docs = list(enumerate(list(task_doc_func())))
-        rnd = random.Random()
-        rnd.seed(42)
-        rnd.shuffle(task_docs)
+        task_docs = task_doc_func()
 
-        print(f"Filtering '{task_prompt_name}' for invalid documents")
-        task_docs = filter(lambda idoc: not task.invalid_doc_for_prompt(idoc[1]), task_docs)
+        print(f"\nAssigning unique IDs to '{task_prompt_name}' docs")
+        task_docs = task_docs.map(
+            lambda example, idx: {**example, f'doc_id': idx},
+            with_indices=True
+        )
+        print(f"Filtering invalid docs from '{task_prompt_name}'")
+        task_docs = task_docs.filter(
+            lambda d: not task.invalid_doc_for_prompt(d))
+
+        # Deterministically shuffle docs and chop off the first `limit` because sometimes docs are in some kind of order
+        rng = np.random.default_rng(42)  # TODO: Make this user-configurable.
+        task_docs = task_docs.shuffle(generator=rng)
 
         description = (
             description_dict[task_prompt_name]
@@ -198,15 +204,15 @@ def evaluate(
         )
 
         print(f"Constructing '{task_prompt_name}' contexts and requests")
-        pbar_limit = len(task_docs) if not limit else limit
-        for doc_id, (original_doc_id, doc) in enumerate(
+        pbar_limit = len(task_docs) if not limit else np.minimum(limit, len(task_docs))
+        for doc_id, doc in enumerate(
             tqdm(itertools.islice(task_docs, 0, limit), total=pbar_limit)
         ):
             docs[(task_prompt_name, doc_id)] = doc
             ctx, fewshotex_logging_info = task.fewshot_context(
-                doc=doc, num_fewshot=num_fewshot, rnd=rnd, description=description
+                doc=doc, num_fewshot=num_fewshot, rnd=rng, description=description
             )
-            fewshotex_logging_info["doc_id"] = original_doc_id
+            fewshotex_logging_info["doc_id"] = doc['doc_id']
             args = {"num_fewshot": num_fewshot}
             reqs = task.construct_requests(doc, ctx, args)
             if not isinstance(reqs, (list, tuple)):

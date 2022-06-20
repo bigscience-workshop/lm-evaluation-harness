@@ -832,14 +832,17 @@ class PromptSourceTask(Task):
                 out["sari"] = mean
         return out
 
-    def fewshot_examples(self, k, rnd):
-        if self._training_docs is None:
-            self._training_docs = list(self.training_docs())
-        return self._get_fewshot_examples(self._training_docs, k, rnd)
+    def fewshot_examples(self, docs ,k, rnd):
+        """Returns `k` random examples from the set of documents in `docs`.
 
-    def _get_fewshot_examples(self, docs, k, rnd):
-        """Returns random k examples from the list of documents."""
-        indices = list(np.arange(len(docs)))
+        :param docs: datasets.Dataset
+            The dataset of documents to sample few-shot examples from.
+        :param k: int
+            The number of few-shot examples.
+        :param rnd: np.random.Generator
+            The pseudo-random number generator used to randomly sample examples.
+        """
+        indices = np.arange(len(docs)).tolist()
         rnd.shuffle(indices)
         
         i = 0
@@ -849,7 +852,7 @@ class PromptSourceTask(Task):
                 break
             if self.invalid_doc_for_prompt(docs[rnd_idx]):
                 continue
-            fewshot_idx.append(int(rnd_idx))
+            fewshot_idx.append(rnd_idx)
             fewshot_examples.append(docs[rnd_idx])
             i += 1
         return fewshot_examples, fewshot_idx
@@ -867,7 +870,7 @@ class PromptSourceTask(Task):
             The number of fewshot examples to provide in the returned context string.
         :param provide_description: bool
             Not implemented, and this option is deprecated and will be removed in a future version in favor of a different description providing method
-        :param rnd: random.Random
+        :param rnd: numpy.random.Generator
             The pseudo-random number generator used to randomly sample examples.
             WARNING: This is currently a required arg although it's optionalized with a default `None`.
         :param description: str
@@ -877,7 +880,7 @@ class PromptSourceTask(Task):
         """
         assert (
             rnd is not None
-        ), "A `random.Random` generator argument must be provided to `rnd`"
+        ), "A `numpy.random.Generator` argument must be provided to `rnd`"
         assert not provide_description, (
             "The `provide_description` arg will be removed in future versions. To prepend "
             "a custom description to the context, supply the corresponding string via the "
@@ -902,7 +905,8 @@ class PromptSourceTask(Task):
         else:
             # for sets with no training docs, draw from other set *but ensure no overlap with current doc*
             if self.has_training_docs():
-                fewshotex, fewshotidx = self.fewshot_examples(k=num_fewshot, rnd=rnd)
+                fewshotex, fewshotidx = self.fewshot_examples(
+                    self.training_docs(), k=num_fewshot, rnd=rnd)
                 self.fewshotsource = "train"
             else:
                 if self._fewshot_docs is None:
@@ -916,7 +920,7 @@ class PromptSourceTask(Task):
                     elif self.test_docs():
                         self.fewshotsource = "test"
 
-                fewshotex, fewshotidx = self._get_fewshot_examples(
+                fewshotex, fewshotidx = self.fewshot_examples(
                     self._fewshot_docs, k=num_fewshot + 1, rnd=rnd
                 )
                 fewshotex, fewshotidx = zip(
@@ -1147,7 +1151,7 @@ class PerplexityTask(Task, abc.ABC):
         ), "The number of fewshot examples must be 0 for perplexity tasks."
         assert (
             rnd is not None
-        ), "A `random.Random` generator argument must be provided to `rnd`."
+        ), "A `numpy.random.Generator` argument must be provided to `rnd`."
         assert not provide_description, (
             "The `provide_description` arg will be removed in future versions. To prepend "
             "a custom description to the context, supply the corresponding string via the "
