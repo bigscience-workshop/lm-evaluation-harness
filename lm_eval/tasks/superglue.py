@@ -47,9 +47,7 @@ class BoolQ(PromptSourceTask):
         return False
 
     def training_docs(self):
-        if self._training_docs is None:
-            self._training_docs = list(self.dataset["train"])
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         return self.dataset["validation"]
@@ -71,9 +69,7 @@ class CommitmentBank(PromptSourceTask):
         return False
 
     def training_docs(self):
-        if self._training_docs is None:
-            self._training_docs = list(self.dataset["train"])
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         return self.dataset["validation"]
@@ -135,9 +131,7 @@ class Copa(PromptSourceTask):
         return False
 
     def training_docs(self):
-        if self._training_docs is None:
-            self._training_docs = list(self.dataset["train"])
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         return self.dataset["validation"]
@@ -170,9 +164,7 @@ class MultiRC(PromptSourceTask):
         return False
 
     def training_docs(self):
-        if self._training_docs is None:
-            self._training_docs = list(self.dataset["train"])
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         return self.dataset["validation"]
@@ -195,16 +187,11 @@ class ReCoRD(PromptSourceTask):
     def training_docs(self):
         # In ReCoRD, each doc manifests multiple "examples" in the context of few shot example packing.
         # Each doc consists of multiple answer candidates, each of which is scored yes/no.
-        if self._training_docs is None:
-            self._training_docs = []
-            for doc in self.dataset["train"]:
-                self._training_docs.append(doc)
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         # See: training_docs
-        for doc in self.dataset["validation"]:
-            yield doc
+        return self.dataset["validation"]
 
     def process_results(self, doc, results):
         # ReCoRD's evaluation is actually deceptively simple:
@@ -259,9 +246,7 @@ class WordsInContext(PromptSourceTask):
         return False
 
     def training_docs(self):
-        if self._training_docs is None:
-            self._training_docs = list(self.dataset["train"])
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         return self.dataset["validation"]
@@ -285,12 +270,7 @@ class SGWinogradSchemaChallenge(PromptSourceTask):
 
     def training_docs(self):
         if self.has_training_docs():
-            if self._training_docs is None:
-                # GPT-3 Paper's format only uses positive examples for fewshot "training"
-                self._training_docs = [
-                    doc for doc in self.dataset["train"] if doc["label"]
-                ]
-            return self._training_docs
+            return self.dataset["train"].filter(lambda d: d['label'])
 
     def validation_docs(self):
         return self.dataset["validation"]

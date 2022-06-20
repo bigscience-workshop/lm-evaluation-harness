@@ -60,9 +60,7 @@ class CoLA(PromptSourceTask):
         return False
 
     def training_docs(self):
-        if self._training_docs is None:
-            self._training_docs = list(self.dataset["train"])
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         return self.dataset["validation"]
@@ -83,9 +81,7 @@ class SST(PromptSourceTask):
         return False
 
     def training_docs(self):
-        if self._training_docs is None:
-            self._training_docs = list(self.dataset["train"])
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         return self.dataset["validation"]
@@ -109,9 +105,7 @@ class MNLI(PromptSourceTask):
         return False
 
     def training_docs(self):
-        if self._training_docs is None:
-            self._training_docs = list(self.dataset["train"])
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         if self.has_validation_docs():
@@ -149,9 +143,7 @@ class QNLI(PromptSourceTask):
         return False
 
     def training_docs(self):
-        if self._training_docs is None:
-            self._training_docs = list(self.dataset["train"])
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         return self.dataset["validation"]
@@ -193,9 +185,7 @@ class RTE(PromptSourceTask):
         return False
 
     def training_docs(self):
-        if self._training_docs is None:
-            self._training_docs = list(self.dataset["train"])
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         return self.dataset["validation"]
@@ -219,9 +209,7 @@ class MRPC(PromptSourceTask):
         return False
 
     def training_docs(self):
-        if self._training_docs is None:
-            self._training_docs = list(self.dataset["train"])
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         return self.dataset["validation"]
@@ -242,9 +230,7 @@ class QQP(PromptSourceTask):
         return False
 
     def training_docs(self):
-        if self._training_docs is None:
-            self._training_docs = list(self.dataset["train"])
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         return self.dataset["validation"]
@@ -265,9 +251,7 @@ class STSB(Task):
         return True
 
     def training_docs(self):
-        if self._training_docs is None:
-            self._training_docs = list(self.dataset["train"])
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         return self.dataset["validation"]

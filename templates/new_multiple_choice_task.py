@@ -39,17 +39,10 @@ class NewTask(MultipleChoiceTask):
 
     def training_docs(self):
         if self.has_training_docs():
-            # We cache training documents in `self._training_docs` for faster
-            # few-shot processing. If the data is too large to fit in memory,
-            # return the training data as a generator instead of a list.
-            if self._training_docs is None:
-                # TODO: Return the training document generator from `self.dataset`.
-                # In most case you can leave this as is unless the dataset split is
-                # named differently than the default `"train"`.
-                self._training_docs = list(
-                    map(self._process_doc, self.dataset["train"])
-                )
-            return self._training_docs
+            # TODO: Return the training document generator from `self.dataset`.
+            # In most case you can leave this as is unless the dataset split is
+            # named differently than the default `"train"`.
+            return self.dataset["train"].map(self._process_doc)
 
     def validation_docs(self):
         if self.has_validation_docs():

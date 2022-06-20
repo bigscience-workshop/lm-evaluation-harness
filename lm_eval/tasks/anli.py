@@ -47,9 +47,7 @@ class ANLIBase(PromptSourceTask):
 
     def training_docs(self):
         if self.has_training_docs():
-            if self._training_docs is None:
-                self._training_docs = list(self.dataset["train_r" + str(self.SPLIT)])
-            return self._training_docs
+            return self.dataset["train_r" + str(self.SPLIT)]
 
     def validation_docs(self):
         if self.has_validation_docs():

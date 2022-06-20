@@ -52,9 +52,6 @@ class DROP(PromptSourceTask):
         return False
 
     def training_docs(self):
-        # if self._training_docs is None:
-        #     self._training_docs = list()
-        # return self._training_docs
         return self.dataset["train"]
 
     def validation_docs(self):

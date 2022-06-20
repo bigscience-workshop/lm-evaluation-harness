@@ -64,9 +64,7 @@ class Trex(PromptSourceTask):
 
     def training_docs(self):
         if self.has_training_docs():
-            if self._training_docs is None:
-                self._training_docs = list(self.dataset["train"])
-            return self._training_docs
+            return self.dataset["train"]
 
     def validation_docs(self):
         if self.has_validation_docs():
@@ -123,9 +121,7 @@ class google_re(PromptSourceTask):
 
     def training_docs(self):
         if self.has_training_docs():
-            if self._training_docs is None:
-                self._training_docs = list(self.dataset["train"])
-            return self._training_docs
+            return self.dataset["train"]
 
     def validation_docs(self):
         if self.has_validation_docs():
@@ -181,9 +177,7 @@ class Conceptnet(PromptSourceTask):
 
     def training_docs(self):
         if self.has_training_docs():
-            if self._training_docs is None:
-                self._training_docs = list(self.dataset["train"])
-            return self._training_docs
+            return self.dataset["train"]
 
     def validation_docs(self):
         if self.has_validation_docs():
@@ -240,9 +234,7 @@ class Squad(PromptSourceTask):
 
     def training_docs(self):
         if self.has_training_docs():
-            if self._training_docs is None:
-                self._training_docs = list(self.dataset["train"])
-            return self._training_docs
+            return self.dataset["train"]
 
     def validation_docs(self):
         if self.has_validation_docs():
@@ -250,9 +242,7 @@ class Squad(PromptSourceTask):
 
     def test_docs(self):
         if self.has_test_docs():
-
-            self._test_docs = list(self.dataset["train"])
-            return self._test_docs
+            return self.dataset["train"]
 
     def process_results(self, doc, results):
         out = {}

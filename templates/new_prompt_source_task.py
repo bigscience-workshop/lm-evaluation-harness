@@ -39,25 +39,20 @@ class NewTask(PromptSourceTask):
 
     def training_docs(self):
         if self.has_training_docs():
-            # We cache training documents in `self._training_docs` for faster
-            # few-shot processing. If the data is too large to fit in memory,
-            # return the training data as a generator instead of a list.
-            if self._training_docs is None:
-                # TODO: Return the training document generator from `self.dataset`.
-                # If you need to process the data, `map` over the documents with
-                # the custom procesing function, `self._process_doc`. E.g.
-                # `map(self._process_doc, self.dataset["validation"])`
-                # In most case you can leave this as is unless the dataset split is
-                # named differently than the default `"train"`.
-                self._training_docs = list(self.dataset["train"])
-            return self._training_docs
+            # TODO: Return the training document generator from `self.dataset`.
+            # If you need to process the data, `map` over the documents with
+            # the custom procesing function, `self._process_doc`. E.g.
+            # `self.dataset["train"].map(self._process_doc)`
+            # In most case you can leave this as is unless the dataset split is
+            # named differently than the default `"train"`.
+            return self.dataset["train"]
 
     def validation_docs(self):
         if self.has_validation_docs():
             # TODO: Return the validation document generator from `self.dataset`.
             # If you need to process the data, `map` over the documents with the
             # custom procesing function, `self._process_doc`. E.g.
-            # `map(self._process_doc, self.dataset["validation"])`
+            # `self.dataset["validation"].map(self._process_doc)`
             # In most case you can leave this as is unless the dataset split is
             # named differently than the default `"validation"`.
             return self.dataset["validation"]
@@ -67,7 +62,7 @@ class NewTask(PromptSourceTask):
             # TODO: Return the test document generator from `self.dataset`.
             # If you need to process the data, `map` over the documents with the
             # custom processing function, `self._process_doc`. E.g.
-            # `map(self._process_doc, self.dataset["test"])`
+            # `self.dataset["test"].map(self._process_doc)`
             # In most case you can leave this as is unless the dataset split is
             # named differently than the default `"test"`.
             return self.dataset["test"]

@@ -45,12 +45,7 @@ class GEMXSUMBase(PromptSourceTask):
 
     def training_docs(self):
         if self.has_training_docs():
-            # We cache training documents in `self._training_docs` for faster
-            # few-shot processing. If the data is too large to fit in memory,
-            # return the training data as a generator instead of a list.
-            if self._training_docs is None:
-                self._training_docs = list(self.dataset["train"])
-            return self._training_docs
+            return self.dataset["train"]
 
     def validation_docs(self):
         if self.has_validation_docs():
@@ -76,12 +71,7 @@ class GEMXSUMChallgeSample(GEMXSUMBase):
         
     def training_docs(self):
         if self.has_training_docs():
-            # We cache training documents in `self._training_docs` for faster
-            # few-shot processing. If the data is too large to fit in memory,
-            # return the training data as a generator instead of a list.
-            if self._training_docs is None:
-                self._training_docs = list(self.dataset["challenge_train_sample"])
-            return self._training_docs
+            return self.dataset["challenge_train_sample"]
 
     def validation_docs(self):
         if self.has_validation_docs():
