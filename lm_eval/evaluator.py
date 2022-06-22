@@ -92,7 +92,9 @@ def simple_evaluate(
         task_dict=task_dict,
         num_fewshot=num_fewshot,
         limit=limit,
+        bootstrap_iters=bootstrap_iters,
         description_dict=description_dict,
+        rng=np.random.default_rng(seed)
     )
 
     # add info about the model and few shot config
@@ -120,6 +122,7 @@ def evaluate(
     limit=None,
     bootstrap_iters=100000,
     description_dict=None,
+    rng=np.random.default_rng()
 ):
     """Instantiate and evaluate a model on a list of tasks.
 
@@ -137,6 +140,9 @@ def evaluate(
         Number of iterations for bootstrap statistics
     :param description_dict: dict[str, str]
         Dictionary of custom task descriptions of the form: `task_name: description`
+    :param rng: np.random.Generator
+        Random number generator for shuffling documents and sampling few-shot examples.
+        Default: np.random.default_rng()
     :return
         Dictionary of results
     """
@@ -189,12 +195,11 @@ def evaluate(
             lambda example, idx: {**example, f'doc_id': idx},
             with_indices=True
         )
+
         print(f"Filtering invalid docs from '{task_prompt_name}'")
         task_docs = task_docs.filter(
             lambda d: not task.invalid_doc_for_prompt(d))
-
-        # Deterministically shuffle docs and chop off the first `limit` because sometimes docs are in some kind of order
-        rng = np.random.default_rng(42)  # TODO: Make this user-configurable.
+        
         task_docs = task_docs.shuffle(generator=rng)
 
         description = (
