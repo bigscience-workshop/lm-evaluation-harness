@@ -1,12 +1,11 @@
-import typing
 import math
-from collections.abc import Iterable
 import numpy as np
 import sacrebleu
-from rouge_score import rouge_scorer
 import sklearn.metrics
 import random
-from lm_eval.metric_impls import sari as sari_impl
+import typing
+from collections.abc import Iterable
+from lm_eval.metric_impls import sari as sari_impl, rouge as rouge_impl
 
 
 def mean(arr):
@@ -234,7 +233,8 @@ def _sacreformat(refs, preds):
 def rouge(
     refs: typing.List[str],
     pred: str,
-    rouge_types: typing.List[str] = ["rouge1", "rouge2", "rougeL", "rougeLsum"],
+    rouge_types: typing.List[str] = ["rouge1", "rouge2", "rougeL"],
+    tokenizer = rouge_impl.DEFAULT_NLTK_TOKENIZER
 ):
     """ROUGE with multi-reference support
 
@@ -245,57 +245,14 @@ def rouge(
         A `list` of reference `str`s.
     :param pred:
         A single prediction `str`s.
+    :param rouge_types:
+        A `list` of ROUGE types to compute from the set {"rouge1", "rouge2", "rougeL", "rougeLsum"}.
+    :param tokenizer:
+        Any tokenizer object with a `tokenize` method.
+    
+    Higher is better.
     """
-
-    # Add newlines between sentences to correctly compute `rougeLsum`.
-    if "rougeLsum" in rouge_types:
-        # TODO: Adapt this to handle languages that do not support sentence endings by `.`.
-        # See GEM-metrics implementation with lang specific `nltk` tokenizers to
-        # split sentences.
-        pred = pred.replace(".", ".\n")
-        refs = [ref.replace(".", ".\n") for ref in refs]
-
-    scorer = rouge_scorer.RougeScorer(rouge_types=rouge_types, use_stemmer=True)
-    # ROUGE multi-ref jackknifing
-    if len(refs) > 1:
-        cur_scores = [scorer.score(ref, pred) for ref in refs]
-
-        # get best score for all leave-one-out sets
-        best_scores = []
-        for leave in range(len(refs)):
-            cur_scores_leave_one = [
-                cur_scores[s] for s in range(len(refs)) if s != leave
-            ]
-            best_scores.append(
-                {
-                    rouge_type: max(
-                        [s[rouge_type] for s in cur_scores_leave_one],
-                        key=lambda s: s.fmeasure,
-                    )
-                    for rouge_type in rouge_types
-                }
-            )
-        # average the leave-one-out bests to produce the final score
-        score = {
-            rouge_type: rouge_scorer.scoring.Score(
-                np.mean([b[rouge_type].precision for b in best_scores]),
-                np.mean([b[rouge_type].recall for b in best_scores]),
-                np.mean([b[rouge_type].fmeasure for b in best_scores]),
-            )
-            for rouge_type in rouge_types
-        }
-    else:
-        score = scorer.score(refs[0], pred)
-    # convert the named tuples to plain nested dicts
-    score = {
-        rouge_type: {
-            "precision": score[rouge_type].precision,
-            "recall": score[rouge_type].recall,
-            "fmeasure": score[rouge_type].fmeasure,
-        }
-        for rouge_type in rouge_types
-    }
-    return score
+    return rouge_impl.rouge(refs, pred, rouge_types, tokenizer)
 
 
 # stderr stuff

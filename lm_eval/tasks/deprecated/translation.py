@@ -14,6 +14,7 @@ from pprint import pprint
 from sacrebleu import sacrebleu
 from lm_eval import metrics
 from lm_eval.base import Task, rf
+from lm_eval.utils import code_to_pycountry_lang
 from typing import List
 
 
@@ -124,8 +125,8 @@ class GeneralTranslationTask(Task):
 
     def doc_to_text(self, doc):
         language_codes = self.sacrebleu_language_pair.split("-")
-        src_lang = code_to_language(language_codes[0])
-        tar_lang = code_to_language(language_codes[1])
+        src_lang = code_to_pycountry_lang(language_codes[0]).name
+        tar_lang = code_to_pycountry_lang(language_codes[1]).name
         return f"{src_lang} phrase: " + doc["src"] + f"\n{tar_lang} phrase:"
 
     def doc_to_target(self, doc):
@@ -187,17 +188,6 @@ class GeneralTranslationTask(Task):
 
     def __str__(self):
         language_codes = self.sacrebleu_language_pair.split("-")
-        src_lang = code_to_language(language_codes[0])
-        tar_lang = code_to_language(language_codes[1])
+        src_lang = code_to_pycountry_lang(language_codes[0]).name
+        tar_lang = code_to_pycountry_lang(language_codes[1]).name
         return f"{self.sacrebleu_dataset.upper()} {src_lang} to {tar_lang} Task"
-
-
-########################################
-# Util
-########################################
-
-
-def code_to_language(code):
-    # key is alpha_2 or alpha_3 depending on the code length
-    language_tuple = pycountry.languages.get(**{f"alpha_{len(code)}": code})
-    return language_tuple.name

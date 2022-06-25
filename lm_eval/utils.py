@@ -308,3 +308,10 @@ def select_continuation_from_batch_left_padding(generations, max_context_size):
     [yesterday]  PAD PAD PAD PAD
     """
     return generations[:, max_context_size:]
+
+def code_to_pycountry_lang(code):
+    """ Returns a pycountry.db.Language from the specified ISO code. """
+    import pycountry
+    # key is alpha_2 or alpha_3 depending on the code length
+    language_tuple = pycountry.languages.get(**{f"alpha_{len(code)}": code})
+    return language_tuple

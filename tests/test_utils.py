@@ -2,10 +2,8 @@ from lm_eval.utils import (
     get_rolling_token_windows,
     make_disjoint_window,
     select_continuation_from_batch_left_padding,
+    split_and_pad_windows
 )
-
-import lm_eval.models as models
-import pytest
 import torch
 
 
