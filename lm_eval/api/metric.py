@@ -1,12 +1,17 @@
-import typing
+import logging
 import math
-from collections.abc import Iterable
+import random
 import numpy as np
 import sacrebleu
-from rouge_score import rouge_scorer
 import sklearn.metrics
-import random
-from lm_eval.metric_impls import sari as sari_impl
+from collections.abc import Iterable
+from rouge_score import rouge_scorer
+from typing import List, Optional
+
+from lm_eval.metrics import sari as sari_impl
+
+
+logger = logging.getLogger(__name__)
 
 
 def mean(arr):
@@ -46,7 +51,6 @@ def f1_score(items):
     golds = unzipped_list[0]
     preds = unzipped_list[1]
     fscore = sklearn.metrics.f1_score(golds, preds)
-
     return np.max(fscore)
 
 
@@ -90,7 +94,6 @@ def acc_all_stderr(items):
 def compute_parity_scores(items):
     # Parity checks whether predictions in subsequent pairs of examples are consistent.
     # In WinogenderSchema those examples differ only in the gender of the pronoun in the hypothesis.
-
     indices2predictions = {idx: pred for idx, pred in items}
     parity_scores = []
     for idx in indices2predictions.keys():
@@ -98,7 +101,6 @@ def compute_parity_scores(items):
             parity_scores.append(
                 int(indices2predictions[idx] == indices2predictions[idx + 1])
             )
-
     return parity_scores
 
 
@@ -108,7 +110,6 @@ def parity(items):
         acc = mean(parity_scores)
     else:
         acc = 0.0
-
     return acc
 
 
@@ -118,7 +119,6 @@ def parity_stderr(items):
         stderr = mean_stderr(parity_scores)
     else:
         stderr = 0.0
-
     return stderr
 
 
@@ -157,7 +157,7 @@ def bleu(items):
     """The Bilingual Evaluation Understudy Score, or BLEU for short, is a metric
     for evaluating a generated sentence to a reference sentence. It counts matching
     n-grams in the candidate translation to n-grams in the reference text, where
-    1-gram or unigram would be each token and a bigram comparison would be each
+    1-gram or uni-gram would be each token and a bi-gram comparison would be each
     word pair. The comparison is made regardless of word order
     Source: https://machinelearningmastery.com/calculate-bleu-score-for-text-python/
     Paper: https://www.aclweb.org/anthology/P02-1040/
@@ -176,7 +176,7 @@ def chrf(items):
     Source: https://github.com/m-popovic/chrF
     Paper: https://www.aclweb.org/anthology/W15-3049.pdf
 
-    Higher is better  # TODO I think
+    Higher is better
     """
     refs = list(zip(*items))[0]
     preds = list(zip(*items))[1]
@@ -232,9 +232,9 @@ def _sacreformat(refs, preds):
 
 
 def rouge(
-    refs: typing.List[str],
+    refs: List[str],
     pred: str,
-    rouge_types: typing.List[str] = ["rouge1", "rouge2", "rougeL", "rougeLsum"],
+    rouge_types: Optional[List[str]] = ["rouge1", "rouge2", "rougeL", "rougeLsum"],
 ):
     """ROUGE with multi-reference support
 
@@ -245,6 +245,8 @@ def rouge(
         A `list` of reference `str`s.
     :param pred:
         A single prediction `str`s.
+    :param rouge_types:
+        An optional list of ROUGE types from the set ["rouge1", "rouge2", "rougeL", "rougeLsum"].
     """
 
     # Add newlines between sentences to correctly compute `rougeLsum`.
@@ -298,10 +300,10 @@ def rouge(
     return score
 
 
-# stderr stuff
+# Standard Error Utils
 
 
-class _bootstrap_internal:
+class _BootstrapInternal:
     def __init__(self, f, n):
         self.f = f
         self.n = n
@@ -323,17 +325,17 @@ def bootstrap_stderr(f, xs, iters):
     # this gives a biased estimate of the stderr (i.e w/ the mean, it gives something
     # equivalent to stderr calculated without Bessel's correction in the stddev.
     # Unfortunately, I haven't been able to figure out what the right correction is
-    # to make the bootstrap unbiased - i considered multiplying by sqrt(n/(n-1)) but
+    # to make the bootstrap unbiased - I considered multiplying by sqrt(n/(n-1)) but
     # that would be ad-hoc and I can't prove that that would actually be an unbiased estimator)
-    # Thankfully, shouldn't matter because our samples are pretty big usually anyways
+    # Thankfully, shouldn't matter because our samples are usually pretty big.
     res = []
     chunk_size = min(1000, iters)
     from tqdm import tqdm
 
-    print("bootstrapping for stddev:", f.__name__)
+    logger.info("Bootstrapping for stddev:", f.__name__)
     for bootstrap in tqdm(
         pool.imap(
-            _bootstrap_internal(f, chunk_size),
+            _BootstrapInternal(f, chunk_size),
             [(i, xs) for i in range(iters // chunk_size)],
         ),
         total=iters // chunk_size,
@@ -362,10 +364,3 @@ def stderr_for_metric(metric, bootstrap_iters):
     stderr = {mean: mean_stderr, acc_all: acc_all_stderr, parity: parity_stderr}
 
     return stderr.get(metric, None)
-
-
-def yesno(x):
-    if x:
-        return "yes"
-    else:
-        return "no"

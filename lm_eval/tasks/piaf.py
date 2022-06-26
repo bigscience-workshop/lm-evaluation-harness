@@ -2,13 +2,16 @@
 Project PIAF: Building a Native French Question-Answering Dataset
 https://arxiv.org/pdf/2007.00968.pdf
 
-Piaf is a reading comprehension dataset. This version, published in February 2020, 
+Piaf is a reading comprehension dataset. This version, published in February 2020,
 contains 3835 questions on French Wikipedia.
 
 Homepage: https://huggingface.co/datasets/piaf
 """
-from lm_eval.base import PromptSourceTask, Task, rf, mean
 import transformers.data.metrics.squad_metrics as squad_metrics
+
+from lm_eval.api.task import PromptSourceTask
+from lm_eval.api.metric import mean
+
 
 _CITATION = """
 @InProceedings{keraron-EtAl:2020:LREC,
@@ -59,12 +62,12 @@ class PIAF(PromptSourceTask):
     def compute_scores(doc, pred):
         # tests for exact match and on the normalised answer (compute_exact)
         # test for overlap (compute_f1)
-        
-        em_sum = squad_metrics.compute_exact(doc[0], pred) 
+
+        em_sum = squad_metrics.compute_exact(doc[0], pred)
         f1_sum = squad_metrics.compute_f1(doc[0], pred)
 
         return {
-            "em": em_sum ,
+            "em": em_sum,
             "f1": f1_sum,
         }
 

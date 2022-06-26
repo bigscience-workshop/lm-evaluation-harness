@@ -8,7 +8,8 @@ language processing.
 Homepage: https://machinetranslate.org/wmt
 """
 import typing
-from lm_eval.base import TranslationTask
+
+from lm_eval.api.task import TranslationTask
 
 
 # TODO: Add each WMT year BibTeX citation.
@@ -34,6 +35,7 @@ class WMTBase(TranslationTask):
 
 
 # WMT 2014
+
 
 class WMT14Base(WMTBase):
     DATASET_PATH = "wmt14"
@@ -75,5 +77,5 @@ def create_year_tasks(year_classes) -> typing.Dict[str, WMTBase]:
     for task_class in year_classes:
         benchmark = task_class.DATASET_PATH
         lang_pair = task_class.DATASET_NAME.replace("-", "_")
-        tasks[f'{benchmark}_{lang_pair}'] = task_class
+        tasks[f"{benchmark}_{lang_pair}"] = task_class
     return tasks

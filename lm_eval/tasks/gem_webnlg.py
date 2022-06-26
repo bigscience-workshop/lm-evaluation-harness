@@ -13,7 +13,7 @@ we present the results of the generation and semantic parsing
 task for both English and Russian and provide a brief
 description of the participating systems.
 """
-from lm_eval.base import PromptSourceTask
+from lm_eval.api.task import PromptSourceTask
 
 
 _CITATION = """

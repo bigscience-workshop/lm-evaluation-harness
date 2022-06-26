@@ -90,17 +90,17 @@ def SARIngram(sgrams, cgrams, rgramslist, numref):
     delscore_precision = 0
     if len(delgramcounter_rep) > 0:
         delscore_precision = deltmpscore1 / len(delgramcounter_rep)
-    delscore_recall = 0
-    if len(delgramcounterall_rep) > 0:
-        delscore_recall = deltmpscore1 / len(delgramcounterall_rep)
-    delscore = 0
-    if delscore_precision > 0 or delscore_recall > 0:
-        delscore = (
-            2
-            * delscore_precision
-            * delscore_recall
-            / (delscore_precision + delscore_recall)
-        )
+    # delscore_recall = 0
+    # if len(delgramcounterall_rep) > 0:
+    #     delscore_recall = deltmpscore1 / len(delgramcounterall_rep)
+    # delscore = 0
+    # if delscore_precision > 0 or delscore_recall > 0:
+    #     delscore = (
+    #         2
+    #         * delscore_precision
+    #         * delscore_recall
+    #         / (delscore_precision + delscore_recall)
+    #     )
 
     # ADDITION
     addgramcounter = set(cgramcounter) - set(sgramcounter)

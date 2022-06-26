@@ -9,9 +9,7 @@ provided explanations.
 
 Homepage: "https://github.com/facebookresearch/anli"
 """
-import numpy as np
-from lm_eval.base import rf, PromptSourceTask
-from lm_eval.metrics import mean
+from lm_eval.api.task import PromptSourceTask
 
 
 _CITATION = """

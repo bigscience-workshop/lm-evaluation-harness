@@ -7,7 +7,8 @@ code-switched language pairs. The code below contains evaluation for sentiment a
 
 Homepage: https://ritual.uh.edu/lince/datasets
 """
-from lm_eval.base import PromptSourceTask
+from lm_eval.api.task import PromptSourceTask
+
 
 _CITATION = """
 @inproceedings{aguilar-etal-2020-lince,

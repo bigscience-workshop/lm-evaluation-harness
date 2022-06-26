@@ -6,7 +6,7 @@ Storytelling with Dialogue: A Critical Role Dungeons and Dragons Dataset. Critic
 
 Homepage: https://github.com/RevanthRameshkumar/CRD3
 """
-from lm_eval.base import PromptSourceTask
+from lm_eval.api.task import PromptSourceTask
 
 
 # TODO: Add the BibTeX citation for the task.
@@ -23,7 +23,6 @@ conference = {ACL}
 
 class CRD3(PromptSourceTask):
     VERSION = 0
-
     DATASET_PATH = "shanya/crd3"
     DATASET_NAME = None
 

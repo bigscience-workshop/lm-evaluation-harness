@@ -7,7 +7,7 @@ which contains many examples where the heuristics fail.
 
 Homepage: https://github.com/tommccoy1/hans
 """
-from lm_eval.base import PromptSourceTask
+from lm_eval.api.task import PromptSourceTask
 
 
 _CITATION = """

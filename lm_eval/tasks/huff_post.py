@@ -3,7 +3,7 @@ A dataset of approximately 200K news headlines from the year 2012 to 2018 collec
 
 Homepage: https://www.kaggle.com/datasets/rmisra/news-category-dataset
 """
-from lm_eval.base import PromptSourceTask
+from lm_eval.api.task import PromptSourceTask
 
 
 _CITATION = """\
@@ -24,6 +24,7 @@ _CITATION = """\
   doi = {10.13140/RG.2.2.20331.18729}
 }
 """
+
 
 class HuffPost(PromptSourceTask):
     VERSION = 0
