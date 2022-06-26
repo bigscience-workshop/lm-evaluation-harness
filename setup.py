@@ -23,13 +23,10 @@ install_requires = [
     "sqlitedict==1.6.0",
     "torch>=1.7",
     "tqdm-multiprocess==0.0.11",
-    "transformers>=4.20.1",
+    "transformers@git+https://github.com/huggingface/transformers@main",
     "promptsource@git+https://github.com/bigscience-workshop/promptsource@eval-hackathon",
-    "bleurt@https://github.com/google-research/bleurt/archive/b610120347ef22b494b6d69b4316e303f5932516.zip#egg=bleurt",
 ]
-dependency_links = [
-    "https://github.com/google-research/bleurt/archive/b610120347ef22b494b6d69b4316e303f5932516.zip#egg=bleurt",
-]
+dependency_links = []
 
 
 class PostInstall(install):
