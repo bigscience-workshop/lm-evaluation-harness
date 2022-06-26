@@ -29,6 +29,7 @@ from . import piaf
 from . import race
 from . import schema_guided_dstc8
 from . import superglue
+from . import tydiqa
 from . import wino_bias
 from . import wmt
 from . import xquad
@@ -185,6 +186,9 @@ TASK_REGISTRY = {
     "blimp_wh_vs_that_no_gap_long_distance": blimp.BlimpWhVsThatNoGapLongDistance,
     "blimp_wh_vs_that_with_gap": blimp.BlimpWhVsThatWithGap,
     "blimp_wh_vs_that_with_gap_long_distance": blimp.BlimpWhVsThatWithGapLongDistance,
+    # TyDi QA
+    "tydiqa_primary": tydiqa.TyDiQAPrimaryClassification,
+    "tydiqa_secondary": tydiqa.TyDiQAGoldPGeneration,
     #######################################################
     # TODO: Not Yet Available in `promptsource/eval-hackathon`
     ########################################################
