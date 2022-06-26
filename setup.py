@@ -13,6 +13,7 @@ install_requires = [
     "jsonlines==2.0.0",
     "lm_dataformat==0.0.20",
     "nltk",
+    "openai",
     "pycountry==20.7.3",
     "pybind11==2.6.2",
     "pytablewriter==0.58.0",
@@ -22,8 +23,8 @@ install_requires = [
     "sqlitedict==1.6.0",
     "torch>=1.7",
     "tqdm-multiprocess==0.0.11",
+    "transformers>=4.20.1",
     "promptsource@git+https://github.com/bigscience-workshop/promptsource@eval-hackathon",
-    "transformers@git+https://github.com/huggingface/transformers@main",
     "bleurt@https://github.com/google-research/bleurt/archive/b610120347ef22b494b6d69b4316e303f5932516.zip#egg=bleurt",
 ]
 dependency_links = [
