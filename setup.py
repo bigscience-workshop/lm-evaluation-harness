@@ -10,7 +10,6 @@ dev_requires = (["black", "coverage", "mock>=4.0.3", "pytest"],)
 install_requires = [
     "datasets",
     "codecarbon",
-    "jinja2",
     "jsonlines==2.0.0",
     "lm_dataformat==0.0.20",
     "nltk",
@@ -27,7 +26,6 @@ install_requires = [
     "transformers@git+https://github.com/huggingface/transformers@main",
     "bleurt@https://github.com/google-research/bleurt/archive/b610120347ef22b494b6d69b4316e303f5932516.zip#egg=bleurt",
 ]
-
 dependency_links = [
     "https://github.com/google-research/bleurt/archive/b610120347ef22b494b6d69b4316e303f5932516.zip#egg=bleurt",
 ]
