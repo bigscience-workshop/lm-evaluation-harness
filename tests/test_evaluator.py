@@ -63,24 +63,23 @@ def test_evaluator(task_name, task_class):
     lm.loglikelihood_rolling = _ll_perp_fn
 
     limit = 5
-    rng = np.random.default_rng(_SEED)
     e1 = evaluator.evaluate(
         lm=lm,
         task_dict=task_dict,
         num_fewshot=0,
-        limit=limit,
-        bootstrap_iters=10,
         description_dict=None,
-        rng=rng,
+        bootstrap_iters=10,
+        limit=limit,
+        rng=np.random.default_rng(_SEED),
     )["results"]
     e2 = evaluator.evaluate(
         lm=lm,
         task_dict=task_dict,
         num_fewshot=0,
-        limit=limit,
-        bootstrap_iters=10,
         description_dict=None,
-        rng=rng,
+        bootstrap_iters=10,
+        limit=limit,
+        rng=np.random.default_rng(_SEED),
     )["results"]
     # Check that caching is working
     assert e1 == e2
