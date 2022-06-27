@@ -243,17 +243,13 @@ class PromptSourceTask(Task):
         """Denote where the generation should end based on the few-shot example
         separator.
 
-        Default: "\n###\n".
+        NOTE: Override this if you want to use a different separator for a task.
         """
         return ["\n###\n"]
 
     def max_generation_length(self) -> Optional[int]:
         """Denote where the max length of the generation if it is obvious from the task."""
         return None
-
-    def doc_to_text(self, doc: dict) -> str:
-        text, _ = self.prompt_template.apply(doc)
-        return text
 
     def evaluation_docs(self) -> datasets.Dataset:
         """Returns the `dataset` split to be used for evaluation."""
@@ -276,6 +272,10 @@ class PromptSourceTask(Task):
             return self.validation_docs()
         else:
             return self.test_docs()
+
+    def doc_to_text(self, doc: dict) -> str:
+        text, _ = self.prompt_template.apply(doc)
+        return text
 
     def doc_to_target(self, doc: dict) -> List[str]:
         _, target = self.prompt_template.apply(doc)

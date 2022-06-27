@@ -135,10 +135,10 @@ def test_openai_completions_perplexity():
     # Hack: modify gpt3 to have shorter context length to induce rolling windows
     with mock.patch.object(
         models.openai_completions.OpenAICompletionsLM,
-        "sequence_length",
+        "max_length",
         new_callable=mock.PropertyMock,
-    ) as mock_sequence_length:
-        mock_sequence_length.return_value = 5
+    ) as mock_max_length:
+        mock_max_length.return_value = 5
         oa_model = models.get_model("openai").create_from_arg_string("engine=ada")
         perplexity = oa_model.loglikelihood_rolling([(test_string,)])[0]
     tgt = -101.81967209999999

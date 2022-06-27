@@ -62,7 +62,7 @@ def test_evaluator(task_name, task_class):
     lm.loglikelihood = _ll_fn
     lm.loglikelihood_rolling = _ll_perp_fn
 
-    limit = 10
+    limit = 5
     rng = np.random.default_rng(_SEED)
     e1 = evaluator.evaluate(
         lm=lm,

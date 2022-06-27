@@ -19,16 +19,16 @@ logger = logging.getLogger(__name__)
 
 def simple_evaluate(
     *,
-    model: Union[str, lm_eval.api.model.LanguageModel],
+    model: Union[str, lm_eval.api.model.LM],
     model_args: Optional[str] = None,
     tasks: List[Union[str, lm_eval.api.task.Task]] = None,
     num_fewshot: Optional[int] = 0,
     batch_size: Optional[int] = None,
     device: Optional[str] = None,
     no_cache: Optional[bool] = False,
-    limit: Optional[int] = None,
-    bootstrap_iters: Optional[int] = 100000,
     description_dict: Optional[Mapping[str, str]] = None,
+    bootstrap_iters: Optional[int] = 100000,
+    limit: Optional[int] = None,
     seed: Optional[int] = 1234,
 ):
     """Instantiate and evaluate a model on a list of tasks.
@@ -49,12 +49,12 @@ def simple_evaluate(
         PyTorch device (e.g. "cpu" or "cuda:0") for running models
     :param no_cache: bool
         Whether or not to cache
-    :param limit: int, optional
-        Limit the number of examples per task (only use this for testing)
-    :param bootstrap_iters:
-        Number of iterations for bootstrap statistics
     :param description_dict: dict[str, str]
         Dictionary of custom task descriptions of the form: `task_name: description`
+    :param bootstrap_iters:
+        Number of iterations for bootstrap statistics
+    :param limit: int, optional
+        Limit the number of examples per task (only use this for testing)
     :param seed: int
         Random seed.
     :return
@@ -71,7 +71,7 @@ def simple_evaluate(
             {"batch_size": batch_size, "device": device},
         )
     else:
-        assert isinstance(model, lm_eval.api.model.LanguageModel)
+        assert isinstance(model, lm_eval.api.model.LM)
         lm = model
 
     if not no_cache:
@@ -86,9 +86,9 @@ def simple_evaluate(
         lm=lm,
         task_dict=task_dict,
         num_fewshot=num_fewshot,
+        description_dict=description_dict,
         limit=limit,
         bootstrap_iters=bootstrap_iters,
-        description_dict=description_dict,
         rng=np.random.default_rng(seed),
     )
 
@@ -109,12 +109,12 @@ def simple_evaluate(
 
 def evaluate(
     *,
-    lm: lm_eval.api.model.LanguageModel,
+    lm: lm_eval.api.model.LM,
     task_dict: Mapping[str, lm_eval.api.task.PromptSourceTask],
     num_fewshot: Optional[int] = 0,
-    limit: Optional[int] = None,
+    description_dict: Optional[dict] = None,
     bootstrap_iters: Optional[int] = 100000,
-    description_dict=None,
+    limit: Optional[int] = None,
     rng: Optional[np.random.Generator] = np.random.default_rng(),
 ):
     """Instantiate and evaluate a model on a list of tasks.
@@ -126,12 +126,12 @@ def evaluate(
         if defined and type(task).__name__ otherwise.
     :param num_fewshot: int
         Number of examples in few-shot context
-    :param limit: int, optional
-        Limit the number of examples per task (only use this for testing)
-    :param bootstrap_iters:
-        Number of iterations for bootstrap statistics
     :param description_dict: dict[str, str]
         Dictionary of custom task descriptions of the form: `task_name: description`
+    :param bootstrap_iters:
+        Number of iterations for bootstrap statistics
+    :param limit: int, optional
+        Limit the number of examples per task (only use this for testing)
     :param rng: np.random.Generator
         Random number generator for shuffling documents and sampling few-shot examples.
         Default: np.random.default_rng()
@@ -178,7 +178,10 @@ def evaluate(
         ):
             docs[(task_prompt_name, doc_id)] = doc
             ctx, fewshotex_logging_info = task.fewshot_context(
-                doc=doc, num_fewshot=num_fewshot, rng=rng, description=description
+                doc=doc,
+                num_fewshot=num_fewshot,
+                description=description,
+                rng=rng,
             )
             fewshotex_logging_info["doc_id"] = doc["doc_id"]
             args = {"num_fewshot": num_fewshot}

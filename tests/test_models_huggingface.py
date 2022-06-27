@@ -30,10 +30,10 @@ def test_stop_sequences(stop_sequences, test_input, expected):
     )
     inputs = causal_model.token_encode_batch([test_input])
     input_ids = inputs["input_ids"][
-        :, causal_model.max_tokens - causal_model.sequence_length :
+        :, causal_model.max_gen_toks - causal_model.max_length :
     ].to(device)
     attention_mask = inputs["attention_mask"][
-        :, causal_model.max_tokens - causal_model.sequence_length :
+        :, causal_model.max_gen_toks - causal_model.max_length :
     ].to(device)
     generations = causal_model._model_generate(
         inputs={"input_ids": input_ids, "attention_mask": attention_mask},
@@ -170,14 +170,15 @@ def test_causal_model_perplexity():
 
     with mock.patch.object(
         lm_eval.models.huggingface.AutoCausalLM,
-        "sequence_length",
+        "max_length",
         new_callable=mock.PropertyMock,
-    ) as mock_sequence_length:
-        mock_sequence_length.return_value = 5
+    ) as mock_max_length:
+        mock_max_length.return_value = 5
         causal_model = lm_eval.models.get_model("hf-causal").create_from_arg_string(
             "device=cpu,pretrained=gpt2,half=False"
         )
         perplexity = causal_model.loglikelihood_rolling([(test_string,)])[0]
+        print(perplexity)
     tgt = sum(
         [
             -4.96001,

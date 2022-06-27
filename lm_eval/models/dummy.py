@@ -1,10 +1,10 @@
 import random
 from typing import List, Tuple
 
-from lm_eval.api.model import LanguageModel
+from lm_eval.api.model import LM
 
 
-class DummyLM(LanguageModel):
+class DummyLM(LM):
     def __init__(self):
         super().__init__()
 

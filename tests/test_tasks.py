@@ -42,6 +42,7 @@ def _filter_docs(task: PromptSourceTask):
 def test_basic_interface(task_name: str, task_class: PromptSourceTask):
     print("Evaluating task", task_name)
     task_class = tasks.get_task(task_name)
+
     prompt_template, is_deterministic = _get_deterministic_template(task_class)
     task = task_class(prompt_template=prompt_template)
 
@@ -101,19 +102,22 @@ def test_documents_and_requests(task_name: str, task_class: PromptSourceTask):
     task = task_class(prompt_template=prompt_template)
 
     fns = []
-    if task.has_training_docs():
-        fns.append(task.training_docs)
+
+    # Training docs are too expensive to run on CI.
+    # if task.has_training_docs():
+    #     fns.append(task.training_docs)
     if task.has_validation_docs():
         fns.append(task.validation_docs)
     for fn in fns:
-        for doc in islice(fn().filter(_filter_docs(task)), 5):
-            txt = task.doc_to_text(doc)
-            tgt = task.doc_to_target(doc)
+        docs = fn().filter(_filter_docs(task))
+        for doc in islice(docs, 5):
+            text = task.doc_to_text(doc)
+            target = task.doc_to_target(doc)
 
-            assert isinstance(txt, str)
-            assert isinstance(tgt, list)
+            assert isinstance(text, str)
+            assert isinstance(target, list)
 
-            requests = task.construct_requests(doc, txt, {"num_fewshot": 0})
+            requests = task.construct_requests(doc, text, {"num_fewshot": 0})
 
             # Construct_requests can return just one request
             if not isinstance(requests, (list, tuple)):

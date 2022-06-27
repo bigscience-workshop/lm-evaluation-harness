@@ -3,10 +3,10 @@ import transformers
 from typing import List, Tuple
 
 from lm_eval import tasks, evaluator
-from lm_eval.api.model import LanguageModel
+from lm_eval.api.model import LM
 
 
-class DryrunLM(LanguageModel):
+class DryrunLM(LM):
     def __init__(self):
         self.tokencost = 0
         self.tokenizer = transformers.GPT2TokenizerFast.from_pretrained("gpt2")
@@ -18,31 +18,24 @@ class DryrunLM(LanguageModel):
 
     def loglikelihood(self, requests):
         res = []
-
         for ctx, cont in requests:
             res.append((-random.random(), False))
             self.tokencost += len(self.tokenizer.tokenize(ctx + cont))
-
         return res
 
     def greedy_until(self, requests: List[Tuple[str, dict]]) -> List[str]:
         res = []
-
         for ctx, until in requests:
-            res.append("lol")
-
+            res.append("null")
             # assume worst case - generates until 256
             self.tokencost += len(self.tokenizer.tokenize(ctx)) + 256
-
         return res
 
     def loglikelihood_rolling(self, requests):
         res = []
-
         for (s,) in requests:
             # assume worst case: extra full context
             self.tokencost += len(self.tokenizer.tokenize(s)) + 2048
-
         return res
 
 

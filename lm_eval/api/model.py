@@ -12,7 +12,7 @@ from transformers import BatchEncoding
 from lm_eval.api import utils
 
 
-class LanguageModel(abc.ABC):
+class LM(abc.ABC):
     def __init__(self):
         self.cache_hook = CacheHook(None)
 
@@ -105,7 +105,7 @@ class LanguageModel(abc.ABC):
     @classmethod
     def create_from_arg_string(
         cls, arg_string: str, additional_config: Optional[Mapping[str, str]] = None
-    ) -> "LanguageModel":
+    ) -> "LM":
         additional_config = {} if additional_config is None else additional_config
         args = utils.parse_cli_args_string(arg_string)
         args2 = {k: v for k, v in additional_config.items() if v is not None}
@@ -118,18 +118,18 @@ class LanguageModel(abc.ABC):
 TokenSequence = Union[List[int], torch.LongTensor, torch.Tensor, BatchEncoding]
 
 
-class TokenLM(LanguageModel):
+class TokenLM(LM):
     """A language model that assumes inputs, and possibly outputs, are
     tokenized text as opposed to language model APIs that only support
     string-based input and output systems.
     """
 
     @abc.abstractmethod
-    def token_encode(self, string: str):
+    def tok_encode(self, string: str):
         pass
 
     @abc.abstractmethod
-    def token_decode(self, tokens: Iterable[int]) -> List[str]:
+    def tok_decode(self, tokens: Iterable[int]) -> List[str]:
         pass
 
     @property
@@ -144,19 +144,24 @@ class TokenLM(LanguageModel):
 
     @property
     @abc.abstractmethod
-    def max_tokens(self) -> int:
-        """The maximum number of tokens allowed in the generation - not including context."""
+    def max_gen_toks(self) -> int:
+        """The maximum number of tokens to generate - not including context."""
         pass
 
     @property
     @abc.abstractmethod
-    def sequence_length(self) -> int:
-        """The sequence length of the model."""
+    def max_length(self) -> int:
+        """The maximum sequence length of the model."""
         pass
 
     @property
     @abc.abstractmethod
     def batch_size(self) -> int:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def device(self):
         pass
 
     def loglikelihood(
@@ -168,8 +173,8 @@ class TokenLM(LanguageModel):
                 # End of text as context
                 context_enc = [self.eot_token_id]
             else:
-                context_enc = self.token_encode(context)
-            continuation_enc = self.token_encode(continuation)
+                context_enc = self.tok_encode(context)
+            continuation_enc = self.tok_encode(continuation)
             new_requests.append(
                 ((context, continuation), context_enc, continuation_enc)
             )
@@ -184,9 +189,9 @@ class TokenLM(LanguageModel):
                 map(
                     utils.make_disjoint_window,
                     utils.get_rolling_token_windows(
-                        token_list=self.token_encode(string),
+                        token_list=self.tok_encode(string),
                         prefix_token=self.eot_token_id,
-                        max_seq_len=self.sequence_length,
+                        max_seq_len=self.max_length,
                         context_len=1,
                     ),
                 )
@@ -263,7 +268,7 @@ class TokenLM(LanguageModel):
                 # sanity check
                 assert len(context_enc) > 0
                 assert len(continuation_enc) > 0
-                assert len(continuation_enc) <= self.sequence_length
+                assert len(continuation_enc) <= self.max_length
 
                 # How this all works:
                 #          CTX      CONT
@@ -275,7 +280,7 @@ class TokenLM(LanguageModel):
                 # When too long to fit in context, truncate from the left
                 _full_enc = context_enc + continuation_enc
                 input = torch.tensor(
-                    _full_enc[-(self.sequence_length + 1) :][:-1],
+                    _full_enc[-(self.max_length + 1) :][:-1],
                     dtype=torch.long,
                 ).to(self.device)
                 (input_len,) = input.shape
@@ -370,7 +375,7 @@ def hash_args(attr, args):
 
 
 class CachingLM:
-    def __init__(self, lm: LanguageModel, cache_db: str):
+    def __init__(self, lm: LM, cache_db: str):
         """LM wrapper that returns cached results if they exist, and uses the underlying LM if not.
 
         :param lm: LM
@@ -417,7 +422,6 @@ class CachingLM:
                 hsh = hash_args(attr, req)
                 self.dbdict[hsh] = r
             self.dbdict.commit()
-
             return res
 
         return fn

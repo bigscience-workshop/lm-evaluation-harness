@@ -69,7 +69,7 @@ class OpenAICompletionsLM(TokenLM):
         engine: str,
         device: Optional[str] = None,
         batch_size: Optional[int] = 20,
-        max_tokens: Optional[int] = 256,
+        max_gen_toks: Optional[int] = 256,
         parallelize: Optional[bool] = False,
     ):
         """
@@ -89,7 +89,7 @@ class OpenAICompletionsLM(TokenLM):
         self.tokenizer.pad_token = "<|endoftext|>"
         self.vocab_size = self.tokenizer.vocab_size
 
-        self._max_tokens = max_tokens
+        self._max_gen_toks = max_gen_toks
         self._batch_size = batch_size  # TODO: adaptive batch size
 
         openai.api_key = os.environ["OPENAI_API_SECRET_KEY"]
@@ -104,13 +104,13 @@ class OpenAICompletionsLM(TokenLM):
         return self.tokenizer.eos_token_id
 
     @property
-    def sequence_length(self) -> int:
+    def max_length(self) -> int:
         # Note: the OpenAI API supports up to 2049 tokens, with the first token being the first input token
         return 2048
 
     @property
-    def max_tokens(self) -> int:
-        return self._max_tokens
+    def max_gen_toks(self) -> int:
+        return self._max_gen_toks
 
     @property
     def batch_size(self) -> int:
@@ -120,10 +120,10 @@ class OpenAICompletionsLM(TokenLM):
     def device(self) -> str:
         raise NotImplementedError()
 
-    def token_encode(self, string: str):
+    def tok_encode(self, string: str):
         return self.tokenizer.encode(string, add_special_tokens=False)
 
-    def token_decode(self, tokens: Iterable[int]) -> List[str]:
+    def tok_decode(self, tokens: Iterable[int]) -> List[str]:
         return self.tokenizer.decode(tokens)
 
     def _loglikelihood_tokens(
@@ -147,14 +147,12 @@ class OpenAICompletionsLM(TokenLM):
             inputs = []
             ctxlens = []
             for cache_key, context_enc, continuation_enc in chunk:
-                # sequence_length+1 because the API takes up to 2049 tokens, including the first context token
-                input = (context_enc + continuation_enc)[-(self.sequence_length + 1) :]
+                # max_gen_toks+1 because the API takes up to 2049 tokens, including the first context token
+                input = (context_enc + continuation_enc)[-(self.max_length + 1) :]
                 # TODO: the logic is much simpler if we just look at the length of continuation tokens
                 ctxlen = len(context_enc) - max(
                     0,
-                    len(context_enc)
-                    + len(continuation_enc)
-                    - (self.sequence_length + 1),
+                    len(context_enc) + len(continuation_enc) - (self.max_length + 1),
                 )
                 inputs.append(input)
                 ctxlens.append(ctxlen)
@@ -173,7 +171,7 @@ class OpenAICompletionsLM(TokenLM):
 
     def greedy_until(self, requests: List[Tuple[str, dict]]) -> List[str]:
         def _collate(x):
-            tokens = self.token_encode(x[0])
+            tokens = self.tok_encode(x[0])
             return len(tokens), x[0]
 
         def sameuntil_chunks(xs, size):
@@ -210,17 +208,17 @@ class OpenAICompletionsLM(TokenLM):
             if stop_sequences is None or num_fewshot == 0:
                 until = [self.eot_token]
             else:
-                until = stop_sequences
+                until = stop_sequences + [self.eot_token]
 
             if max_generation_length is None:
-                max_tokens = self.max_tokens
+                max_tokens = self.max_gen_toks
             else:
                 max_tokens = max_generation_length
 
             inputs = []
             for context, _ in chunk:
-                context_enc = self.token_encode(context)
-                input = context_enc[-(self.sequence_length - self.max_tokens) :]
+                context_enc = self.tok_encode(context)
+                input = context_enc[-(self.max_length - self.max_gen_toks) :]
                 inputs.append(input)
 
             responses = self._model_generate(
