@@ -42,9 +42,7 @@ class TyDiQAPrimaryClassification(PromptSourceTask):
         return False
 
     def training_docs(self):
-        if self._training_docs is None:
-            self._training_docs = list(self.dataset["train"])
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         return self.dataset["validation"]
@@ -55,7 +53,7 @@ class TyDiQAPrimaryClassification(PromptSourceTask):
         # This means the prompt will never produce an input and target.
         # TODO: Remove this when fixed in `promptsource`
         try:
-            self.prompt.apply(doc)
+            text, _ = self.prompt_template.apply(doc)
             return False
         except Exception:
             return True
@@ -81,9 +79,7 @@ class TyDiQAGoldPGeneration(PromptSourceTask):
         return False
 
     def training_docs(self):
-        if self._training_docs is None:
-            self._training_docs = list(self.dataset["train"])
-        return self._training_docs
+        return self.dataset["train"]
 
     def validation_docs(self):
         return self.dataset["validation"]
@@ -101,7 +97,7 @@ class TyDiQAGoldPGeneration(PromptSourceTask):
         out = {}
 
         # Detect cases handled in superclass method
-        for metric in self.prompt.metadata.metrics:
+        for metric in self.prompt_template.metadata.metrics:
             if (
                 metric
                 in self.CONFIGURED_RANKED_CHOICE_PS_METRICS
@@ -127,7 +123,7 @@ class TyDiQAGoldPGeneration(PromptSourceTask):
 
     def higher_is_better(self):
         out = {}
-        for metric in self.prompt.metadata.metrics:
+        for metric in self.prompt_template.metadata.metrics:
             if (
                 metric
                 in self.CONFIGURED_RANKED_CHOICE_PS_METRICS
@@ -141,7 +137,7 @@ class TyDiQAGoldPGeneration(PromptSourceTask):
 
     def aggregation(self):
         out = {}
-        for metric in self.prompt.metadata.metrics:
+        for metric in self.prompt_template.metadata.metrics:
             if (
                 metric
                 in self.CONFIGURED_RANKED_CHOICE_PS_METRICS
@@ -159,7 +155,8 @@ class TyDiQAGoldPGeneration(PromptSourceTask):
         # This means the prompt will never produce an input and target.
         # TODO: Remove this when fixed in `promptsource`
         try:
-            self.prompt.apply(doc)
+            # Ensure the `apply` returns 2 values.
+            text, _ = self.prompt_template.apply(doc)
             return False
         except Exception:
             return True
