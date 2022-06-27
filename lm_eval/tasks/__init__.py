@@ -41,8 +41,8 @@ logger = logging.getLogger(__name__)
 TASK_REGISTRY = {
     # GLUE
     "cola": glue.CoLA,
-    # "mnli": glue.MNLI,
-    # "mnli_mismatched": glue.MNLIMismatched,
+    "mnli": glue.MNLI,
+    "mnli_mismatched": glue.MNLIMismatched,
     "mrpc": glue.MRPC,
     "rte": glue.RTE,
     "qnli": glue.QNLI,
@@ -88,6 +88,9 @@ TASK_REGISTRY = {
     "gem_xsum_challenge_test_covid": gem_xsum.GEMXSUMChallgeTestCovid,
     # LAMA
     "lama-trex": lama.Trex,
+    "lama-squad": lama.Squad,
+    "lama-google_re": lama.google_re,
+    "lama-conceptnet": lama.Conceptnet,
     # WinoBias
     "wino_bias_type1_pro": wino_bias.WinoBiasType1Pro,
     "wino_bias_type1_anti": wino_bias.WinoBiasType1Anti,
@@ -192,11 +195,6 @@ TASK_REGISTRY = {
     #######################################################
     # TODO: Not Yet Available in `promptsource/eval-hackathon`
     ########################################################
-    # LAMA
-    # "lama-squad": lama.Squad,
-    # "lama-google_re": lama.google_re,
-    # "lama-conceptnet": lama.Conceptnet,
-    # "bigscience-lama": lama.BigScienceLAMA,
     # WMT
     # Format: `wmt{year}_{lang1}-{lang2}`
     # **wmt.create_year_tasks(wmt.WMT14_TASKS),
@@ -205,6 +203,8 @@ TASK_REGISTRY = {
     # "mlsum_de": gem_mlsum.GEMMLSUMDe,
     # "mlsum_es_covid_challenge_set": gem_mlsum.GEMMLSUMEsChallgeTestCovid,
     # "mlsum_de_covid_challenge_set": gem_mlsum.GEMMLSUMDeChallgeTestCovid,
+    # LAMA
+    # "bigscience-lama": lama.BigScienceLAMA,
     ########################################################
     # TODO: Erroring Tasks
     ########################################################
@@ -310,7 +310,7 @@ def get_task_dict_promptsource(task_name_list: List[str]):
 
 
 def get_task_templates(task: lm_eval.api.task.PromptSourceTask) -> DatasetTemplates:
-    """Returns the `promptsource.DatasetTemplates` for a `PromptSourceTask` task."""
+    """Returns the `promptsource.DatasetTemplates` for a `PromptSourceTask."""
     sub_task = f"/{task.DATASET_NAME}" if task.DATASET_NAME else ""
     ps_task_name = f"{task.DATASET_PATH}{sub_task}"
     return DatasetTemplates(ps_task_name)
