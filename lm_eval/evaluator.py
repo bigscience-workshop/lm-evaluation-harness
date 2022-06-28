@@ -159,7 +159,7 @@ def evaluate(
         task_docs = task.evaluation_docs()
         logger.warning(f"\n» Assigning unique IDs to '{task_prompt_name}' docs")
         task_docs = task_docs.map(
-            lambda ex, idx: {**ex, f"doc_id": idx}, with_indices=True
+            lambda ex, idx: {**ex, "doc_id": idx}, with_indices=True
         )
         logger.warning(f"» Filtering invalid docs from '{task_prompt_name}'")
         task_docs = task_docs.filter(lambda d: not task.invalid_doc_for_prompt(d))
