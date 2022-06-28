@@ -13,6 +13,10 @@ class HuggingFaceAutoLM(TokenLM):
 
     AUTO_MODEL_CLASS: transformers.AutoModel = None
 
+    # Default max sequence length setting for when no `max_length` is provided
+    # or no max length config setting is found in the model or tokenizer.
+    _DEFAULT_MAX_LENGTH: int = 2048
+
     def __init__(
         self,
         pretrained: str,
@@ -33,23 +37,23 @@ class HuggingFaceAutoLM(TokenLM):
         assert isinstance(pretrained, str)
         assert isinstance(batch_size, int)
 
+        self.model = self.create_auto_model(pretrained, revision, subfolder)
         self.tokenizer = self.create_auto_tokenizer(
             pretrained, revision, subfolder, tokenizer
         )
-        self.model = self.create_auto_model(pretrained, revision, subfolder)
-        self.model.eval()
-        torch.set_grad_enabled(
-            False
-        )  # Turn off gradients; we're only running inference.
 
+        self._batch_size = batch_size  # TODO: adaptive batch size
+        self._device = torch.device(device)
         self._max_gen_toks = max_gen_toks
         self._max_length = max_length
-        self._batch_size = batch_size  # TODO: adaptive batch size
+        self.tokenizer.model_max_length = self.max_length
+
+        self.model.eval()
+        torch.set_grad_enabled(False)
 
         # TODO: Fix multi-gpu support.
         if half:
             self.model.half()
-        self._device = torch.device(device)
         if parallelize:
             self.model.parallelize()
             self._device = torch.device("cuda:0")
@@ -95,14 +99,14 @@ class HuggingFaceAutoLM(TokenLM):
 
     @property
     def max_length(self) -> int:
-        """Return the sequence length of the model.
+        """Return the maximum sequence length of the model.
         NOTE: Different model configurations have different max sequence length
         attribute names.
             - n_positions: (CTRLConfig)
             - max_position_embeddings: (BartConfig, RoFormerConfig)
             - n_ctx: (GPT2Config)
-        NOTE: For relative position encoded models you should specify the
-        sequence length of the model in the constructor. Default: `2048`
+        NOTE: For relative position encoded models you should specify the max
+        sequence length of the model in the constructor via `max_length`.
         """
         if self._max_length is not None:
             return self._max_length
@@ -114,9 +118,7 @@ class HuggingFaceAutoLM(TokenLM):
         # Model config has no seq length attribute; return the tokenizer's max length.
         if hasattr(self.tokenizer, "model_max_length"):
             return self.tokenizer.model_max_length
-        # For relative pos encoding models like `T5`` that do not require a
-        # sequence length, use `2048`` as a default.
-        return 2048
+        return self._DEFAULT_MAX_LENGTH
 
     @property
     def batch_size(self) -> int:
@@ -129,10 +131,10 @@ class HuggingFaceAutoLM(TokenLM):
         return self._device
 
     def tok_encode(self, strings: str) -> TokenSequence:
-        # TODO: Merge `token_encode_batch` here.
+        # TODO: Merge `tok_encode_batch` here.
         return self.tokenizer.encode(strings, add_special_tokens=False)
 
-    def token_encode_batch(self, strings: List[str]) -> TokenSequence:
+    def tok_encode_batch(self, strings: List[str]) -> TokenSequence:
         return self.tokenizer(
             strings, padding=True, add_special_tokens=False, return_tensors="pt"
         )
@@ -175,7 +177,7 @@ class HuggingFaceAutoLM(TokenLM):
 
             # Ensure that the context does not encroach into the `space`
             # for the generation.
-            token_context = self.token_encode_batch(context)
+            token_context = self.tok_encode_batch(context)
             input_ids = token_context["input_ids"][
                 :, self.max_gen_toks - self.max_length :
             ].to(self.device)
@@ -228,14 +230,14 @@ class AutoCausalLM(HuggingFaceAutoLM):
     def _model_generate(
         self, inputs: TokenSequence, max_tokens: int, stop: Optional[List[str]] = None
     ) -> TokenSequence:
-        stop = stop_sequences_criteria(self.tokenizer, stop)
+        stopping_criteria = stop_sequences_criteria(self.tokenizer, stop)
         generations = self.model.generate(
             **inputs,
-            # GPT style models require the generate `max_length` arg to include the
+            # GPT style models require the `generate` `max_length` arg to include the
             # context length, so we instead set `max_new_tokens` which is the number
             # of new tokens to generate, excluding the current number of tokens.
             max_new_tokens=max_tokens,
-            stopping_criteria=stop,
+            stopping_criteria=stopping_criteria,
             do_sample=False,
         )
         return utils.select_continuation_from_batch_left_padding(
@@ -251,18 +253,14 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
 
     AUTO_MODEL_CLASS = transformers.AutoModelForSeq2SeqLM
 
-    def create_auto_tokenizer(
-        self,
-        pretrained: str,
-        revision: str,
-        subfolder: str,
-        tokenizer: Optional[str] = None,
-    ) -> transformers.PreTrainedTokenizer:
-        tokenizer = super().create_auto_tokenizer(
-            pretrained, revision, subfolder, tokenizer
-        )
-        tokenizer.model_max_length = self.max_length
-        return tokenizer
+    @property
+    def max_length(self) -> int:
+        """Return the maximum sequence length of the model.
+        TODO: Currently only works for relative position encoded Seq2Seq models.
+        """
+        if self._max_length is not None:
+            return self._max_length
+        return self._DEFAULT_MAX_LENGTH
 
     def loglikelihood(
         self, requests: List[Tuple[str, str]]
@@ -272,13 +270,12 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
             context, continuation = zip(*chunk)
             # Fill empty contexts with the EOT token.
             context = [
-                f"{self.eot_token}" if len(input_) == 0 else input_
-                for input_ in context
+                f"{self.eot_token}" if len(text) == 0 else text for text in context
             ]
-            context_enc = self.token_encode_batch(context)
+            context_enc = self.tok_encode_batch(context)
             for key in context_enc:
                 context_enc[key] = context_enc[key][:, -(self.max_length - 1) :]
-            continuation_enc = self.token_encode_batch(list(continuation))
+            continuation_enc = self.tok_encode_batch(list(continuation))
             for key in continuation_enc:
                 continuation_enc[key] = continuation_enc[key][
                     :, -(self.max_length - 1) :
@@ -379,11 +376,11 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
     def _model_generate(
         self, inputs: TokenSequence, max_tokens: int, stop: Optional[List[str]] = None
     ) -> Union[TokenSequence, List[str]]:
-        stop = stop_sequences_criteria(self.tokenizer, stop)
+        stopping_criteria = stop_sequences_criteria(self.tokenizer, stop)
         generations = self.model.generate(
             **inputs,
             max_length=max_tokens,
-            stopping_criteria=stop,
+            stopping_criteria=stopping_criteria,
             do_sample=False,
         )
         return generations
