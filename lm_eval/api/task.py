@@ -394,17 +394,14 @@ class PromptSourceTask(Task):
         description = description + "\n\n" if description else ""
         prompt = self.doc_to_text(doc)
         ctx = description + labeled_examples + prompt
-
-        return (
-            ctx,
-            {
-                "fewshot_idx": fewshot_idx,
-                "fewshot_target_idx": fewshot_target_idx,
-                "fewshot_source": fewshot_src,
-                "fewshot_num": num_fewshot,
-                "ctx": ctx,
-            },
-        )
+        logging_info = {
+            "fewshot_idx": fewshot_idx,
+            "fewshot_target_idx": fewshot_target_idx,
+            "fewshot_source": fewshot_src,
+            "fewshot_num": num_fewshot,
+            "ctx": ctx,
+        }
+        return ctx, logging_info
 
     def construct_requests(self, doc: dict, ctx: str, args: dict) -> List[Request]:
         """Uses RequestFactory to construct Requests and returns an iterable of

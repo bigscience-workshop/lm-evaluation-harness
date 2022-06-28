@@ -33,7 +33,7 @@ def simple_evaluate(
 ):
     """Instantiate and evaluate a model on a list of tasks.
 
-    :param model: Union[str, ]
+    :param model: Union[str, lm_eval.api.model.LM]
         Name of model or LM object, see lm_eval.models.get_model
     :param model_args: Optional[str]
         String arguments for each model class, see LM.create_from_arg_string.

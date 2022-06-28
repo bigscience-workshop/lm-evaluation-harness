@@ -244,7 +244,7 @@ class TokenLM(LM):
             # - Time estimates will always be over not underestimates, which is more useful for planning
             # - To know the size of a batch when going through the list, you know the first one is always the batch
             #   padded context length. this is useful to simplify the batching logic and more importantly to make
-            #   automatic adaptive batches much much easier to implement
+            #   automatic adaptive batches much easier to implement
             # - Any OOMs will happen right away rather than near the end
             tokens = x[1] + x[2]
             return -len(tokens), tuple(tokens)
@@ -304,7 +304,7 @@ class TokenLM(LM):
                 cont_tokens_list.append(continuation_enc)
                 input_lens.append(input_len)
 
-            batched_inputs = torch.cat(inputs, dim=0)  # [batch, padding_length
+            batched_inputs = torch.cat(inputs, dim=0)  # [batch, padding_length]
             multi_logits = F.log_softmax(
                 self._model_call(batched_inputs), dim=-1
             ).cpu()  # [batch, padding_length, vocab]

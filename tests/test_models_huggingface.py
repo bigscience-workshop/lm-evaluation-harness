@@ -28,7 +28,7 @@ def test_stop_sequences(stop_sequences, test_input, expected):
     causal_model = lm_eval.models.get_model("hf-causal")(
         pretrained="gpt2", half=False, device=device
     )
-    inputs = causal_model.token_encode_batch([test_input])
+    inputs = causal_model.tok_encode_batch([test_input])
     input_ids = inputs["input_ids"][
         :, causal_model.max_gen_toks - causal_model.max_length :
     ].to(device)
@@ -110,19 +110,6 @@ def test_causal_model():
     assert ll_max_1
     assert ll_max_2
 
-    # Test empty context
-    causal_model.loglikelihood([("", "test")])
-    request_args = {
-        "stop_sequences": [".", "\n", "'"],
-        "max_generation_length": None,
-        "num_fewshot": 1,
-    }
-    (gen,) = causal_model.greedy_until(
-        [("The quick brown fox jumps over the lazy", request_args)]
-    )
-
-    assert gen == ", lazy fox and they both fall to the ground"
-
     targets = [
         -61.60536193847656,
         -56.57843780517578,
@@ -137,6 +124,18 @@ def test_causal_model():
 
     for (pred, _), tgt in zip(vals, targets):
         assert pred == pytest.approx(tgt, rel=1e-3)
+
+    # Test empty context
+    causal_model.loglikelihood([("", "test")])
+    request_args = {
+        "stop_sequences": [".", "\n", "'"],
+        "max_generation_length": None,
+        "num_fewshot": 1,
+    }
+    (gen,) = causal_model.greedy_until(
+        [("The quick brown fox jumps over the lazy", request_args)]
+    )
+    assert gen == ", lazy fox and they both fall to the ground"
 
 
 def test_causal_model_perplexity():
