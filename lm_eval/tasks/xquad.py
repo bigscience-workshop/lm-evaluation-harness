@@ -89,7 +89,7 @@ class XQuADEnglish(PromptSourceTask):
         }
 
         cont_request = rf.greedy_until(ctx, request_args)
-        is_unanswerable = rf.loglikelihood(ctx, " " + "unanswerable")
+        is_unanswerable = rf.loglikelihood(ctx, "unanswerable")
 
         return cont_request, is_unanswerable
 
@@ -233,7 +233,7 @@ class XQuADArabic(PromptSourceTask):
         }
 
         cont_request = rf.greedy_until(ctx, request_args)
-        is_unanswerable = rf.loglikelihood(ctx, " " + "unanswerable")
+        is_unanswerable = rf.loglikelihood(ctx, "unanswerable")
 
         return cont_request, is_unanswerable
 

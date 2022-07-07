@@ -22,9 +22,10 @@ def _ll_fn(requests):
     for ctx, cont in requests:
         if len(ctx) == 0:
             continue
-        # Space convention
-        assert ctx[-1] != " "
-        assert cont[0] == " " or ctx[-1] == "\n"
+        # Check text-target-separator default spacing convention.
+        # (ctx + ' ') + cont
+        assert ctx[-1] == " "
+        assert cont[0] != " "
     res = []
     random.seed(_SEED)
     for _ in requests:
