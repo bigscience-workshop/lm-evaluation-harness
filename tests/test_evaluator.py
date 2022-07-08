@@ -23,9 +23,9 @@ def _ll_fn(requests):
         if len(ctx) == 0:
             continue
         # Check text-target-separator default spacing convention.
-        # (ctx + ' ') + cont
-        assert ctx[-1] == " "
-        assert cont[0] != " "
+        # ctx + (' ' + cont)
+        assert ctx[-1] != " "
+        assert cont[0] == " "
     res = []
     random.seed(_SEED)
     for _ in requests:
@@ -68,7 +68,6 @@ def test_evaluator(task_name, task_class):
         lm=lm,
         task_dict=task_dict,
         num_fewshot=0,
-        description_dict=None,
         bootstrap_iters=10,
         limit=limit,
         rng=np.random.default_rng(_SEED),
@@ -77,7 +76,6 @@ def test_evaluator(task_name, task_class):
         lm=lm,
         task_dict=task_dict,
         num_fewshot=0,
-        description_dict=None,
         bootstrap_iters=10,
         limit=limit,
         rng=np.random.default_rng(_SEED),
