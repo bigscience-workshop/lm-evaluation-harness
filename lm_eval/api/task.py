@@ -235,25 +235,25 @@ class PromptSourceTask(Task):
         download_mode: Optional[str] = None,
         prompt_template: Optional[promptsource.templates.Template] = None,
         description: Optional[str] = None,
-        example_separator: str = "\n###\n",
+        example_separator: Optional[str] = "\n###\n",
         text_target_separator: Optional[str] = " ",
         save_examples: Optional[bool] = True,
     ):
         """
-        :param save_examples: bool
+        :param save_examples: Optional[bool]
             Whether to save each example and corresponding model predictions to
             an output `dict`.
 
         Few-shot Prompting Args:
-        :param description: str
+        :param description: Optional[str]
             The task's description that will be prepended to the few-shot examples.
-        :param example_separator: str
+        :param example_separator: Optional[str]
             The string that will be used to separate the few-shot examples from
             the prompt example.
             Default: "\n###\n"
                 See Webson & Pavlick (2022) https://arxiv.org/pdf/2109.01247.pdf
                 for justification of this separator.
-        :param text_target_separator: str
+        :param text_target_separator: Optional[str]
             The string that will be used to separate the prompt example from the
             target text. Example:
             `Q: Where is the Eiffel Tower located? A:{text_target_separator}Paris`
@@ -342,7 +342,7 @@ class PromptSourceTask(Task):
             The number of few-shot examples.
         :param rng: np.random.Generator
             The pseudo-random number generator used to randomly sample examples.
-        :param prompt: dict
+        :param prompt: Optional[dict]
             The prompt document. Specify this to ensure the prompt is not in
             the set of few-shot examples.
         """
