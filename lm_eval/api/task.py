@@ -234,10 +234,10 @@ class PromptSourceTask(Task):
         cache_dir: Optional[str] = None,
         download_mode: Optional[str] = None,
         prompt_template: Optional[promptsource.templates.Template] = None,
+        save_examples: Optional[bool] = True,
         description: Optional[str] = None,
         example_separator: Optional[str] = "\n###\n",
         text_target_separator: Optional[str] = " ",
-        save_examples: Optional[bool] = True,
     ):
         """
         :param save_examples: Optional[bool]
