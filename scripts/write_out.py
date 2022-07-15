@@ -1,8 +1,8 @@
 import argparse
 import numpy as np
-import json
 import os
-from lm_eval import tasks
+
+import lm_eval
 from lm_eval.api.utils import join_iters
 
 EXAMPLE_DIVIDER = "!!@@##@@!! -- Example {i}\n"
@@ -11,7 +11,8 @@ EXAMPLE_DIVIDER = "!!@@##@@!! -- Example {i}\n"
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output_base_path", required=True)
-    parser.add_argument("--tasks", default="all_tasks")
+    parser.add_argument("--task_name", type=str, required=True)
+    parser.add_argument("--template_names", default="all_templates")
     parser.add_argument("--sets", type=str, default="val")  # example: val,test
     parser.add_argument("--num_fewshot", type=int, default=1)
     parser.add_argument("--seed", type=int, default=42)
@@ -23,14 +24,14 @@ def main():
     args = parse_args()
     rng = np.random.default_rng(args.seed)
 
-    if args.tasks == "all_tasks":
-        task_names = tasks.ALL_TASKS
+    if args.template_names == "all_templates":
+        template_names = lm_eval.list_templates(args.task_name)
     else:
-        task_names = args.tasks.split(",")
-    task_dict = tasks.get_task_dict_promptsource(task_names)
+        template_names = args.template_names.split(",")
+    tasks = lm_eval.get_task_list(args.task_name, template_names)
 
     os.makedirs(args.output_base_path, exist_ok=True)
-    for task_name, task in task_dict.items():
+    for task, template_name in zip(tasks, template_names):
         iters = []
         for set in args.sets.split(","):
             if set == "train" and task.has_training_docs():
@@ -42,8 +43,8 @@ def main():
             iters.append(docs)
         docs = join_iters(iters)
 
-        task_name = task_name.replace("/", "_")
-        with open(os.path.join(args.output_base_path, task_name), "w") as f:
+        file_name = lm_eval.tasks._get_task_template_key(args.task_name, template_name)
+        with open(os.path.join(args.output_base_path, file_name), "w") as f:
             for i, doc in (
                 zip(range(args.num_examples), docs)
                 if args.num_examples > 0
