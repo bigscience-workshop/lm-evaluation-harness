@@ -22,7 +22,7 @@ def _get_deterministic_template(
     """
     # Only choose 1 promptsource template.
     prompt_template = None
-    templates = tasks._get_templates_from_task_name(task_name)
+    templates = tasks.get_templates(task_name)
     if templates.all_template_names:
         for template_name in templates.all_template_names:
             prompt_template = templates[template_name]

@@ -224,12 +224,6 @@ def list_tasks() -> List[str]:
     return sorted(list(TASK_REGISTRY))
 
 
-def list_templates(task_name: str) -> List[str]:
-    """Returns all template names available in `promptsource` for a given task."""
-    templates = _get_templates_from_task_name(task_name)
-    return sorted(templates.all_template_names)
-
-
 def get_task(task_name: str, template_name: str, **task_kwargs) -> Task:
     """Returns a task from the registry and instantiates it with the `promptsource`
     template specified by `template_name`.
@@ -242,8 +236,7 @@ def get_task(task_name: str, template_name: str, **task_kwargs) -> Task:
             args for `lm_eval.api.task.Task`.
     """
     task_class = _get_task_from_registry(task_name)
-    templates = _get_templates_from_task_name(task_name)
-    template = templates[template_name]
+    template = get_templates(task_name)[template_name]
     return task_class(prompt_template=template, **task_kwargs)
 
 
@@ -264,6 +257,18 @@ def get_task_list(
     return [get_task(task_name, t, **task_kwargs) for t in template_names]
 
 
+def list_templates(task_name: str) -> List[str]:
+    """Returns all template names available in `promptsource` for a given task."""
+    templates = get_templates(task_name)
+    return sorted(templates.all_template_names)
+
+
+def get_templates(task_name: str) -> DatasetTemplates:
+    """Returns the `promptsource` `DatasetTemplates` for the specified task name."""
+    task_class = _get_task_from_registry(task_name)
+    return _get_templates_from_task(task_class)
+
+
 # Helper functions
 
 
@@ -273,12 +278,6 @@ def _get_task_from_registry(task_name: str) -> Type[Task]:
     except KeyError:
         logger.warning(f"Available tasks:\n{list_tasks()}")
         raise KeyError(f"`{task_name}` is missing from the task registry.")
-
-
-def _get_templates_from_task_name(task_name: str) -> DatasetTemplates:
-    """Returns the `promptsource` `DatasetTemplates` for the specified task name."""
-    task_class = _get_task_from_registry(task_name)
-    return _get_templates_from_task(task_class)
 
 
 def _get_templates_from_task(task: Union[Task, Type[Task]]) -> DatasetTemplates:
