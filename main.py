@@ -36,7 +36,7 @@ def parse_args():
         "--template_names",
         default="all_templates",
         help="""Comma-separated list of template names for the specified
-        `--task`. Example:
+        task. Example:
 
         `> python main.py ... --task_name rte --template_names imply,mean`
 
@@ -57,11 +57,6 @@ def parse_args():
         "by passing `use_accelerate=True` to `--model_args`",
     )
     parser.add_argument(
-        "--use_cache",
-        action="store_false",
-        help="Whether to cache your model's predictions or not",
-    )
-    parser.add_argument(
         "--limit",
         type=int,
         default=None,
@@ -79,6 +74,11 @@ def parse_args():
     )
     parser.add_argument(
         "--seed", type=int, default=1234, help="The seed to be put through all RNGs"
+    )
+    parser.add_argument(
+        "--use_cache",
+        action="store_false",
+        help="Whether to cache your model's predictions or not",
     )
     return parser.parse_args()
 
