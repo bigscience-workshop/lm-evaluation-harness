@@ -82,7 +82,7 @@ Some high-level convenience functions are also made available:
 - [`lm_eval.list_model_apis()`](./lm_eval/models/__init__.py) lists all available model APIs you can evaluate from
 - [`lm_eval.list_tasks()`](./lm_eval/tasks/__init__.py) lists all available tasks
 - [`lm_eval.list_templates(task_name)`](./lm_eval/tasks/__init__.py) lists all available templates for a task
-
+- [`lm_eval.get_templates(task_name)`](./lm_eval/tasks/__init__.py) returns promptsource dataset templates for a task
 
 ## Gotchas 🩹
 
