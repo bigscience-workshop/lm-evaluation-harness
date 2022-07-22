@@ -3,7 +3,6 @@
 ![](https://github.com/EleutherAI/lm-evaluation-harness/workflows/Build/badge.svg)
 [![codecov](https://codecov.io/gh/EleutherAI/lm-evaluation-harness/branch/master/graph/badge.svg?token=JSG3O2427J)](https://codecov.io/gh/EleutherAI/lm-evaluation-harness)
 
-
 ## Overview
 
 This project provides a unified framework to test causal (GPT-2, GPT-3, GPTNeo, etc) and seq2seq (T5, T0) language models via prompt evaluation.
@@ -11,7 +10,6 @@ This project provides a unified framework to test causal (GPT-2, GPT-3, GPTNeo, 
 As of now, all prompts are provided via the `promptsource` [eval-hackathon branch](https://github.com/bigscience-workshop/promptsource/tree/eval-hackathon); all datasets are from huggingface `datasets`.
 
 This fork is __not__ backwards compatible with the original evaluation harness.
-
 
 ## Installation
 
@@ -45,7 +43,6 @@ python main.py \
 
 If you have access to the OpenAI API, you can also evaluate GPT-3 engines:
 
-
 ```bash
 export OPENAI_API_SECRET_KEY={YOUR_KEY_HERE}
 python main.py \
@@ -56,40 +53,52 @@ python main.py \
 
  **When reporting results from eval harness, please include the task versions (shown in `results["versions"]`) for reproducibility.** This allows bug fixes to tasks while also ensuring that previously reported scores are reproducible.
 
-
 ### Detailed Usage
 
-```bash
-usage: main.py [-h] --model_api_name MODEL_API_NAME [--model_args MODEL_ARGS] --task_name TASK_NAME
-               [--template_names TEMPLATE_NAMES] [--num_fewshot NUM_FEWSHOT] [--batch_size BATCH_SIZE] [--device DEVICE]
-               [--limit LIMIT] [--output_path OUTPUT_PATH] [--seed SEED] [--use_cache]
+```
+usage: main.py [-h] --model_api_name MODEL_API_NAME [--model_args MODEL_ARGS]
+               --task_name TASK_NAME [--template_names TEMPLATE_NAMES]
+               [--num_fewshot NUM_FEWSHOT] [--batch_size BATCH_SIZE]
+               [--device DEVICE] [--limit LIMIT] [--output_path OUTPUT_PATH]
+               [--seed SEED] [--use_cache]
 
 optional arguments:
   -h, --help            show this help message and exit
   --model_api_name MODEL_API_NAME
-        Name of the model API to use. See lm_eval.list_model_apis() for available APIs
+                        Name of the model API to use. See
+                        `lm_eval.list_model_apis()` for available APIs
   --model_args MODEL_ARGS
-        Model constructor args that you pass into a model of type --model_api_name. These must be comma-separated keyword args, e.g. key1=value1,key2=value2  (with no spaces)
+                        Model constructor args that you'd pass into a model of
+                        type `--model_api_name`. These must be comma-separated
+                        keyword args, e.g. `key1=value1,key2=value2`, with no
+                        spaces
   --task_name TASK_NAME
-        Name of the task to use as found in the lm_eval registry. See: lm_eval.list_tasks()
+                        Name of the task to use as found in the lm_eval
+                        registry. See: `lm_eval.list_tasks()`
   --template_names TEMPLATE_NAMES
-        Comma-separated list of template names for the specified task.
-        Example:
-            > python main.py ... --task_name rte --template_names imply,mean
-        - Default: all_templates
-        - General Selectors:
-            - "all_templates": Selects all templates for the task.
-            - "original_templates": Selects only templates that are designed to match the original task.
+                        Comma-separated list of template names for the specified
+                        task. Example:
+                        `python main.py ... --task_name rte --template_names imply,mean`
+                        - Default: `all_templates`
+                        - General Selectors:
+                            - `"all_templates"`: Selects all templates for the task
+                            - `"original_templates"`: Selects only templates that
+                                are designed to match the original task
   --num_fewshot NUM_FEWSHOT
   --batch_size BATCH_SIZE
-  --device DEVICE   The device to place your model onto, e.g. cuda:0. For large models available through the HuggingFace
-                    Hub you should use accelerate by passing use_accelerate=True to --model_args
-  --limit LIMIT     Limit the number of examples to evaluate on; ONLY USE THIS FOR DEBUGGING PURPOSES
+  --device DEVICE       The device to place your model onto, e.g. cuda:0. For
+                        large models available through the HuggingFace Hub you
+                        should use `accelerate` by passing `use_accelerate=True`
+                        to `--model_args`
+  --limit LIMIT         Limit the number of examples to evaluate on; ONLY USE
+                        THIS FOR DEBUGGING PURPOSES
   --output_path OUTPUT_PATH
-                    Use output_path as output_filename/. For example: Currently, you cannot change/add folder structure.
-                    > python main.py ... --output_path blop # saves files into outputs/blop.json
-  --seed SEED       The seed to be put through all RNGs
-  --use_cache       Whether to cache your models predictions or not
+                        Use output_path as `output_filename`. For example:
+                        `python main.py ... --output_path blop`
+                        saves files into `outputs/blop.json`
+                        Warning: You currently cannot change/add folder structure.
+  --seed SEED           The seed to be put through all RNGs
+  --use_cache           Whether to cache your model's predictions or not
 ```
 
 ## Library Usage 📖
@@ -140,7 +149,6 @@ Some high-level convenience functions are also made available:
 - Growing number of tasks integrated with `promptsource` (20+).
 
 - Support for hugging face causal language models, HuggingFace Seq2Seq models, and the OpenAI completion API (gpt3), with flexible tokenization-agnostic interfaces.
-
 
 ## Implementing new tasks
 

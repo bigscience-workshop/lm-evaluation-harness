@@ -23,7 +23,7 @@ def parse_args():
         "--model_args",
         default="",
         help="Model constructor args that you'd pass into a model of type "
-        "`--model_api_name. These must be comma-separated keyword args, e.g. "
+        "`--model_api_name`. These must be comma-separated keyword args, e.g. "
         "`key1=value1,key2=value2`, with no spaces",
     )
     parser.add_argument(
@@ -42,8 +42,8 @@ def parse_args():
 
         - Default: `all_templates`
         - General Selectors:
-            - `"all_templates"`: Selects all templates for the task.
-            - `"original_templates"`: Selects only templates that are designed to match the original task.
+            - `"all_templates"`: Selects all templates for the task
+            - `"original_templates"`: Selects only templates that are designed to match the original task
         """,
     )
     parser.add_argument("--num_fewshot", type=int, default=0)
@@ -66,10 +66,11 @@ def parse_args():
         "--output_path",
         default=None,
         help="""Use output_path as `output_filename`. For example:
-    Currently, you cannot change/add folder structure.
 
     `> python main.py ... --output_path blop`
     # saves files into `outputs/blop.json`
+
+    Warning: You currently cannot change/add folder structure.
     """,
     )
     parser.add_argument(
