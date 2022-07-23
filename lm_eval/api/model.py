@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as F
 from sqlitedict import SqliteDict
 from tqdm import tqdm
-from typing import Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Tuple, Union
 from transformers import BatchEncoding
 
 from lm_eval.api import utils

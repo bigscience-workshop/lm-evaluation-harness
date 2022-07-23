@@ -3,7 +3,8 @@ import numpy as np
 import os
 
 import lm_eval
-from lm_eval.api.utils import join_iters
+from lm_eval.api import utils
+
 
 EXAMPLE_DIVIDER = "!!@@##@@!! -- Example {i}\n"
 
@@ -24,10 +25,7 @@ def main():
     args = parse_args()
     rng = np.random.default_rng(args.seed)
 
-    if args.template_names == "all_templates":
-        template_names = lm_eval.list_templates(args.task_name)
-    else:
-        template_names = args.template_names.split(",")
+    template_names = utils.cli_template_names(args.task_name, args.template_names)
     tasks = lm_eval.get_task_list(args.task_name, template_names)
 
     os.makedirs(args.output_base_path, exist_ok=True)
@@ -41,7 +39,7 @@ def main():
             if set == "test" and task.has_test_docs():
                 docs = task.test_docs()
             iters.append(docs)
-        docs = join_iters(iters)
+        docs = utils.join_iters(iters)
 
         file_name = lm_eval.tasks._get_task_template_key(args.task_name, template_name)
         with open(os.path.join(args.output_base_path, file_name), "w") as f:

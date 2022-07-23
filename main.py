@@ -3,10 +3,10 @@ import datetime
 import json
 import logging
 import os
-from typing import List
 from codecarbon import OfflineEmissionsTracker
 
-from lm_eval import tasks, evaluator
+import lm_eval.evaluator as evaluator
+from lm_eval.api import utils
 
 
 logger = logging.getLogger("main")
@@ -130,29 +130,6 @@ def setup_example_logger(output_path):
     example_logger.setLevel(logging.INFO)
 
 
-def get_template_names(task_name: str, selected_template_names: str) -> List[str]:
-    """Returns a selection of template names for a given task.
-    Args:
-        - task_name: Name of the task to use from which to retrieve template names.
-        - selected_template_names: A string of template names separated by a
-            comma if multiple names are given.
-            General Selectors: `"all_templates"`, `"original_templates"`
-    """
-    if selected_template_names == "all_templates":
-        template_names = tasks.list_templates(task_name)
-    elif selected_template_names == "original_templates":
-        templates = tasks.get_templates(task_name)
-        template_names = []
-        for name in templates.all_template_names:
-            if templates[name].metadata.original_task is True:
-                template_names.append(name)
-        if not template_names:
-            raise ValueError(f"No original task templates found for {task_name}")
-    else:
-        template_names = selected_template_names.split(",")
-    return template_names
-
-
 def main():
     os.makedirs("./outputs", exist_ok=True)
     args = parse_args()
@@ -163,7 +140,7 @@ def main():
             "SHOULD NOT BE COMPUTED USING LIMIT."
         )
 
-    template_names = get_template_names(args.task_name, args.template_names)
+    template_names = utils.cli_template_names(args.task_name, args.template_names)
     output_path = args_to_name(args)
     setup_example_logger(output_path)
 
