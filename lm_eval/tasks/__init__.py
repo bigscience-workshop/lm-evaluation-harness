@@ -229,7 +229,7 @@ def get_task(task_name: str, template_name: str, **task_kwargs) -> Task:
     template specified by `template_name`.
 
     Args:
-        task_name: Name of the task to load from the `lm_eval` task registry.
+        task_name: Name of the task to load from the task registry.
         template_name: Name of the prompt template from `promptsource` to use
             for this task.
         **task_kwargs: Keyword arguments to pass to the task constructor. See constructor
@@ -246,7 +246,7 @@ def get_task_list(
     """Returns a list of the same task but with multiple prompt templates.
 
     Args:
-        task_name: Name of the task to load from the `lm_eval` task registry.
+        task_name: Name of the task to load from the task registry.
         template_names: Name of the prompt template from `promptsource` to use
             for this task.
         **task_kwargs: Keyword arguments to pass to the task constructor. See constructor
