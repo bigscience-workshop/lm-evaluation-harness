@@ -148,7 +148,7 @@ Some high-level convenience functions are also made available:
 
 - Growing number of tasks integrated with `promptsource` (20+).
 
-- Support for hugging face causal language models, HuggingFace Seq2Seq models, and the OpenAI completion API (gpt3), with flexible tokenization-agnostic interfaces.
+- Support for HuggingFace Causal language models, HuggingFace Seq2Seq models, and the OpenAI Completions API (GPT-3), with flexible tokenization-agnostic interfaces.
 
 ## Implementing new tasks
 
