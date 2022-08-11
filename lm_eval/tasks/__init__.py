@@ -204,8 +204,8 @@ TASK_REGISTRY = {
     # TODO: Not Yet Available in `promptsource/eval-hackathon`
     ########################################################
     # GEM/mlsum
-    # "mlsum_es": gem_mlsum.GEMMLSUMEs,
-    # "mlsum_de": gem_mlsum.GEMMLSUMDe,
+    "mlsum_es": gem_mlsum.GEMMLSUMEs,
+    "mlsum_de": gem_mlsum.GEMMLSUMDe,
     # "mlsum_es_covid_challenge_set": gem_mlsum.GEMMLSUMEsChallgeTestCovid,
     # "mlsum_de_covid_challenge_set": gem_mlsum.GEMMLSUMDeChallgeTestCovid,
     # LAMA
