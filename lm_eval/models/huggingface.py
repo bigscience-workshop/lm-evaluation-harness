@@ -328,7 +328,11 @@ class AutoCausalLM(HuggingFaceAutoLM):
         return self.model(inputs)["logits"]
 
     def _model_generate(
-        self, inputs: TokenSequence, max_tokens: int, min_tokens: int, stop: Optional[List[str]] = None
+        self,
+        inputs: TokenSequence,
+        max_tokens: int,
+        min_tokens: int,
+        stop: Optional[List[str]] = None,
     ) -> TokenSequence:
         stopping_criteria = stop_sequences_criteria(self.tokenizer, stop)
         # Generate at least min_tokens; min_length = prompt + gen tokens
@@ -457,10 +461,7 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
             )
             for cache_key, log_softmax, target_tokens, target_mask in output_iterator:
                 length = target_mask.sum()
-                print("target_mask", target_mask)
-                print("logit size:", log_softmax.shape)
                 log_softmax = log_softmax[:length]
-                print("truncated logit size:", log_softmax.shape)
                 target_tokens = target_tokens[:length]
                 greedy_tokens = log_softmax.argmax(dim=-1)
                 max_equal = (greedy_tokens == target_tokens).all()
@@ -479,7 +480,11 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
         return self.model(**inputs, labels=labels["input_ids"])
 
     def _model_generate(
-        self, inputs: TokenSequence, max_tokens: int, min_tokens: int, stop: Optional[List[str]] = None
+        self,
+        inputs: TokenSequence,
+        max_tokens: int,
+        min_tokens: int,
+        stop: Optional[List[str]] = None,
     ) -> Union[TokenSequence, List[str]]:
         stopping_criteria = stop_sequences_criteria(self.tokenizer, stop)
         min_length = inputs["input_ids"].shape[1] + min_tokens
