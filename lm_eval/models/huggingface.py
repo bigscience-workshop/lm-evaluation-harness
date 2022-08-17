@@ -65,7 +65,6 @@ class HuggingFaceAutoLM(TokenLM):
         subfolder: Optional[str] = None,
         revision: Optional[str] = "main",
         batch_size: Optional[int] = 1,
-        min_length: Optional[int] = None,
         max_gen_toks: Optional[int] = 256,
         max_length: Optional[int] = None,
         use_accelerate: Optional[bool] = False,
@@ -107,7 +106,6 @@ class HuggingFaceAutoLM(TokenLM):
 
         self._batch_size = batch_size  # TODO: Adaptive batch size
         self._max_gen_toks = max_gen_toks
-        self.min_length = min_length
         self._max_length = max_length
         self._config = transformers.AutoConfig.from_pretrained(pretrained)
 
@@ -283,7 +281,6 @@ class HuggingFaceAutoLM(TokenLM):
             responses = self._model_generate(
                 inputs={"input_ids": input_ids, "attention_mask": attention_mask},
                 max_tokens=max_tokens,
-                min_length=self.min_length,
                 stop=until,
             )
             responses = self.tok_decode(responses.tolist())
@@ -331,7 +328,6 @@ class AutoCausalLM(HuggingFaceAutoLM):
         self,
         inputs: TokenSequence,
         max_tokens: int,
-        min_length: int = None,
         stop: Optional[List[str]] = None,
     ) -> TokenSequence:
         stopping_criteria = stop_sequences_criteria(self.tokenizer, stop)
@@ -340,7 +336,6 @@ class AutoCausalLM(HuggingFaceAutoLM):
             # GPT style models require the `generate` `max_length` arg to include the
             # context length, so we instead set `max_new_tokens` which is the number
             # of new tokens to generate, excluding the current number of tokens.
-            min_length=min_length,
             max_new_tokens=max_tokens,
             stopping_criteria=stopping_criteria,
             do_sample=False,
@@ -481,14 +476,12 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
         self,
         inputs: TokenSequence,
         max_tokens: int,
-        min_length: int = None,
         stop: Optional[List[str]] = None,
     ) -> Union[TokenSequence, List[str]]:
         stopping_criteria = stop_sequences_criteria(self.tokenizer, stop)
         generations = self.model.generate(
             **inputs,
-            min_length=min_length,
-            max_length=max_tokens,
+            max_new_tokens=max_tokens,
             stopping_criteria=stopping_criteria,
             do_sample=False,
         )
