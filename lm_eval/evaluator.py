@@ -226,12 +226,12 @@ def evaluate(
             metrics, example = output
             example.update(fewshot_logging_info)
             example.update(task.get_logging_info())
-            example_logger.info(json.dumps(example))
+            example_logger.info(json.dumps(example, ensure_ascii=False))
         else:
             metrics = output
             example = fewshot_logging_info
             example.update(task.get_logging_info())
-            example_logger.info(json.dumps(example))
+            example_logger.info(json.dumps(example, ensure_ascii=False))
 
         for metric, value in metrics.items():
             vals[(task_template_key, metric)].append(value)
