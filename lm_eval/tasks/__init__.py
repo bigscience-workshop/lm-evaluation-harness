@@ -25,6 +25,7 @@ from . import huff_post
 from . import jigsaw_unintended_bias
 from . import lama
 from . import lince
+from . import multi_eurlex
 from . import piaf
 from . import race
 from . import schema_guided_dstc8
@@ -129,6 +130,8 @@ TASK_REGISTRY = {
     # WMT
     # Format: `wmt{year}_{lang1}_{lang2}`
     **wmt.construct_tasks(),
+    # MultiEURLEX
+    "multi_eurlex_mt": multi_eurlex.MultiEURLEXMT,
     # BLiMP
     "blimp_adjunct_island": blimp.BlimpAdjunctIsland,
     "blimp_anaphor_gender_agreement": blimp.BlimpAnaphorGenderAgreement,
