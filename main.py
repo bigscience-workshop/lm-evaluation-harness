@@ -138,7 +138,7 @@ def setup_example_logger(output_path):
     """Sets up a logger that will save each example and prediction."""
     example_logger = logging.getLogger("examples")
     filename = f"./outputs/examples-{output_path}.jsonl"
-    formatter = logging.Formatter("%(message)s")
+    formatter = logging.Formatter(u"%(message)s")
     handler = logging.FileHandler(filename)
     handler.setFormatter(formatter)
     example_logger.addHandler(handler)
