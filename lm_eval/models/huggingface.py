@@ -278,8 +278,6 @@ class HuggingFaceAutoLM(TokenLM):
             else:
                 max_tokens = max_generation_length
 
-            # Ensure that the context does not encroach into the `space`
-            # for the generation.
             token_context = self.tok_encode_batch(context)
 
             responses = self._model_generate(
@@ -334,13 +332,15 @@ class AutoCausalLM(HuggingFaceAutoLM):
         max_tokens: int,
         stop: Optional[List[str]] = None,
     ) -> TokenSequence:
+        # Ensure that the context does not encroach into the `space`
+        # for the generation.
         input_ids = inputs["input_ids"][:, self.max_gen_toks - self.max_length :]
-        input_ids = input_ids.to(self.device)
-
         attention_mask = inputs["attention_mask"][
             :, self.max_gen_toks - self.max_length :
         ]
+        input_ids = input_ids.to(self.device)
         attention_mask = attention_mask.to(self.device)
+
         stopping_criteria = stop_sequences_criteria(
             self.tokenizer, stop, input_ids.shape[1], input_ids.shape[0]
         )
@@ -493,17 +493,17 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
         max_tokens: int,
         stop: Optional[List[str]] = None,
     ) -> Union[TokenSequence, List[str]]:
-        input_ids = inputs["input_ids"][:, -self.max_length :].to(self.device)
-        attention_mask = inputs["attention_mask"][:, -self.max_length :].to(self.device)
+        input_ids = inputs["input_ids"].to(self.device)
+        attention_mask = inputs["attention_mask"].to(self.device)
 
-        # Generate one token to calculate the number of start tokens prepended to decoder_input_ids 
+        # Generate one token to calculate the number of start tokens prepended to decoder_input_ids
         # (leaving this here in case the below assumption is violated in the future)
-        #one_tok_gen = self.model.generate(
+        # one_tok_gen = self.model.generate(
         #    input_ids=torch.zeros((1, 1), dtype=torch.int),
         #    min_length=2,
         #    max_new_tokens=1,
-        #).squeeze()
-        #initial_decoder_input_length = len(one_tok_gen) - 1
+        # ).squeeze()
+        # initial_decoder_input_length = len(one_tok_gen) - 1
 
         # Assume that there will always only be one token in the decoder inputs, assumption holds for existing HF models
         stopping_criteria = stop_sequences_criteria(
