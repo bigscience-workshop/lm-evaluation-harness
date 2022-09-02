@@ -281,15 +281,9 @@ class HuggingFaceAutoLM(TokenLM):
             # Ensure that the context does not encroach into the `space`
             # for the generation.
             token_context = self.tok_encode_batch(context)
-            input_ids = token_context["input_ids"][
-                :, self.max_gen_toks - self.max_length :
-            ].to(self.device)
-            attention_mask = token_context["attention_mask"][
-                :, self.max_gen_toks - self.max_length :
-            ].to(self.device)
 
             responses = self._model_generate(
-                inputs={"input_ids": input_ids, "attention_mask": attention_mask},
+                inputs=token_context,
                 max_tokens=max_tokens,
                 stop=until,
             )
@@ -340,9 +334,14 @@ class AutoCausalLM(HuggingFaceAutoLM):
         max_tokens: int,
         stop: Optional[List[str]] = None,
     ) -> TokenSequence:
-        stopping_criteria = stop_sequences_criteria(self.tokenizer, stop)
+        input_ids = inputs["input_ids"][:, self.max_gen_toks - self.max_length :].to(self.device)
+        attention_mask = inputs["attention_mask"][:, self.max_gen_toks - self.max_length :].to(self.device)
+        stopping_criteria = stop_sequences_criteria(
+            self.tokenizer, stop, input_ids.shape[1], input_ids.shape[0]
+            )
         generations = self.model.generate(
-            **inputs,
+            input_ids=input_ids,
+            attention_mask=attention_mask,
             # GPT style models require the `generate` `max_length` arg to include the
             # context length, so we instead set `max_new_tokens` which is the number
             # of new tokens to generate, excluding the current number of tokens.
@@ -488,9 +487,22 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
         max_tokens: int,
         stop: Optional[List[str]] = None,
     ) -> Union[TokenSequence, List[str]]:
-        stopping_criteria = stop_sequences_criteria(self.tokenizer, stop)
+        input_ids = inputs["input_ids"][:, -self.max_length:].to(self.device)
+        attention_mask = inputs["attention_mask"][:, -self.max_length:].to(self.device)
+
+        # Generate one token to calculate the number of start tokens prepended to decoder_input_ids
+        one_tok_gen = self.model.generate(
+            input_ids=torch.zeros((1,1), dtype=torch.int), min_length=2, max_new_tokens=1
+        ).squeeze()
+
+        initial_decoder_input_length = len(one_tok_gen) - 1
+        
+        stopping_criteria = stop_sequences_criteria(
+            self.tokenizer, stop, initial_decoder_input_length, input_ids.shape[0]
+        )
         generations = self.model.generate(
-            **inputs,
+            input_ids=input_ids,
+            attention_mask=attention_mask,
             max_new_tokens=max_tokens,
             stopping_criteria=stopping_criteria,
             do_sample=False,
@@ -499,30 +511,42 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
 
 
 class MultiTokenEOSCriteria(transformers.StoppingCriteria):
-    """Criteria to stop on the specified multi-token sequence."""
-
-    def __init__(self, sequence: str, tokenizer: transformers.PreTrainedTokenizer):
+    """
+    Criteria to stop on the specified multi-token sequence.
+    """
+    
+    def __init__(
+        self, sequence: str, 
+        tokenizer: transformers.PreTrainedTokenizer, 
+        initial_decoder_input_length: int, 
+        batch_size: int
+    ):
+        self.initial_decoder_input_length = initial_decoder_input_length
+        self.done_tracker = [False] * batch_size
         self.sequence = sequence
-        self.sequence_id = tokenizer.encode(sequence)
-        self.sequence_id_len = len(self.sequence_id) + 1
-        self.tokenizer = tokenizer
+        self.sequence_ids = tokenizer.encode(sequence, add_special_tokens=False)
+        self.sequence_id_len = len(self.sequence_ids)
 
     def __call__(
-        self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
+        self, input_ids, scores, **kwargs
     ) -> bool:
-        last_token_id = input_ids[0, -self.sequence_id_len :]
-        last_tokens = self.tokenizer.decode(last_token_id)
-        is_stopped = self.sequence in last_tokens
-        return is_stopped
+        # For efficiency, we compare the last n tokens where n is the number of tokens in the stop_sequence
+        lookback_ids_batch = input_ids[:, self.initial_decoder_input_length:][:, -self.sequence_id_len:]
+        
+        for i, done in enumerate(self.done_tracker):
+            if not done:
+                self.done_tracker[i] = self.sequence_ids == lookback_ids_batch[i].tolist()
+        
+        return False not in self.done_tracker
 
 
 def stop_sequences_criteria(
-    tokenizer: transformers.PreTrainedTokenizer, stop_sequences: List[str]
+    tokenizer: transformers.PreTrainedTokenizer, stop_sequences: List[str], initial_decoder_input_length: int, batch_size: int
 ) -> transformers.StoppingCriteriaList:
     return transformers.StoppingCriteriaList(
         [
             *[
-                MultiTokenEOSCriteria(sequence, tokenizer)
+                MultiTokenEOSCriteria(sequence, tokenizer, initial_decoder_input_length, batch_size)
                 for sequence in stop_sequences
             ],
         ]
