@@ -560,7 +560,7 @@ def stop_sequences_criteria(
             *[
                 MultiTokenEOSCriteria(
                     sequence, tokenizer, initial_decoder_input_length, batch_size
-                )
+                ) for sequence in stop_sequences
             ],
         ]
     )
