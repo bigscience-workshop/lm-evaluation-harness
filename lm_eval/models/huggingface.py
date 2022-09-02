@@ -544,7 +544,7 @@ class MultiTokenEOSCriteria(transformers.StoppingCriteria):
             :, -self.sequence_id_len :
         ]
 
-        lookback_tokens_batch = self.tokenizer.batch_decode(lookback_ids_batch)        
+        lookback_tokens_batch = self.tokenizer.batch_decode(lookback_ids_batch)
 
         for i, done in enumerate(self.done_tracker):
             if not done:
