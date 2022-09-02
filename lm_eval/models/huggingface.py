@@ -496,17 +496,18 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
         input_ids = inputs["input_ids"][:, -self.max_length :].to(self.device)
         attention_mask = inputs["attention_mask"][:, -self.max_length :].to(self.device)
 
-        # Generate one token to calculate the number of start tokens prepended to decoder_input_ids
-        one_tok_gen = self.model.generate(
-            input_ids=torch.zeros((1, 1), dtype=torch.int),
-            min_length=2,
-            max_new_tokens=1,
-        ).squeeze()
+        # Generate one token to calculate the number of start tokens prepended to decoder_input_ids 
+        # (leaving this here in case the below assumption is violated in the future)
+        #one_tok_gen = self.model.generate(
+        #    input_ids=torch.zeros((1, 1), dtype=torch.int),
+        #    min_length=2,
+        #    max_new_tokens=1,
+        #).squeeze()
+        #initial_decoder_input_length = len(one_tok_gen) - 1
 
-        initial_decoder_input_length = len(one_tok_gen) - 1
-
+        # Assume that there will always only be one token in the decoder inputs, assumption holds for existing HF models
         stopping_criteria = stop_sequences_criteria(
-            self.tokenizer, stop, initial_decoder_input_length, input_ids.shape[0]
+            self.tokenizer, stop, 1, input_ids.shape[0]
         )
 
         generations = self.model.generate(
