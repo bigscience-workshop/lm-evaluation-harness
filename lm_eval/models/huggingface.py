@@ -536,6 +536,7 @@ class MultiTokenEOSCriteria(transformers.StoppingCriteria):
         self.sequence = sequence
         self.sequence_ids = tokenizer.encode(sequence, add_special_tokens=False)
         self.sequence_id_len = len(self.sequence_ids)
+        self.tokenizer = tokenizer
 
     def __call__(self, input_ids, scores, **kwargs) -> bool:
         # For efficiency, we compare the last n tokens where n is the number of tokens in the stop_sequence
@@ -543,10 +544,12 @@ class MultiTokenEOSCriteria(transformers.StoppingCriteria):
             :, -self.sequence_id_len :
         ]
         
+        lookback_tokens_batch = self.tokenizer.batch_decode(lookback_ids_batch)        
+        
         for i, done in enumerate(self.done_tracker):
             if not done:
                 self.done_tracker[i] = (
-                    self.sequence_ids == lookback_ids_batch[i].tolist()
+                    self.sequence in lookback_tokens_batch[i]
                 )        
         return False not in self.done_tracker
 
