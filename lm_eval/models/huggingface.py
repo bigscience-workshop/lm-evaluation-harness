@@ -328,7 +328,7 @@ class AutoCausalLM(HuggingFaceAutoLM):
 
     def _model_generate(
         self,
-        inputs: TokenSequence,
+        inputs: transformers.BatchEncoding,
         max_tokens: int,
         stop: Optional[List[str]] = None,
     ) -> TokenSequence:
@@ -489,10 +489,10 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
 
     def _model_generate(
         self,
-        inputs: TokenSequence,
+        inputs: transformers.BatchEncoding,
         max_tokens: int,
         stop: Optional[List[str]] = None,
-    ) -> Union[TokenSequence, List[str]]:
+    ) -> TokenSequence:
         input_ids = inputs["input_ids"][:, -self.max_length :].to(self.device)
         attention_mask = inputs["attention_mask"][:, -self.max_length :].to(self.device)
 
