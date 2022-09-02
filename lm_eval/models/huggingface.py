@@ -334,11 +334,15 @@ class AutoCausalLM(HuggingFaceAutoLM):
         max_tokens: int,
         stop: Optional[List[str]] = None,
     ) -> TokenSequence:
-        input_ids = inputs["input_ids"][:, self.max_gen_toks - self.max_length :].to(self.device)
-        attention_mask = inputs["attention_mask"][:, self.max_gen_toks - self.max_length :].to(self.device)
-        stopping_criteria = stop_sequences_criteria(
-            self.tokenizer, stop, input_ids.shape[1], input_ids.shape[0]
-        )
+        input_ids = inputs["input_ids"][:, self.max_gen_toks - self.max_length :]
+        input_ids = input_ids.to(self.device)
+        
+        attention_mask = inputs["attention_mask"][
+            :, self.max_gen_toks - self.max_length :
+        ]
+        attention_mask = attention_mask.to(self.device)
+        
+        
         generations = self.model.generate(
             input_ids=input_ids,
             attention_mask=attention_mask,
@@ -487,19 +491,22 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
         max_tokens: int,
         stop: Optional[List[str]] = None,
     ) -> Union[TokenSequence, List[str]]:
-        input_ids = inputs["input_ids"][:, -self.max_length:].to(self.device)
-        attention_mask = inputs["attention_mask"][:, -self.max_length:].to(self.device)
+        input_ids = inputs["input_ids"][:, -self.max_length :].to(self.device)
+        attention_mask = inputs["attention_mask"][:, -self.max_length :].to(self.device)
 
         # Generate one token to calculate the number of start tokens prepended to decoder_input_ids
         one_tok_gen = self.model.generate(
-            input_ids=torch.zeros((1, 1), dtype=torch.int), min_length=2, max_new_tokens=1
+            input_ids=torch.zeros((1, 1), dtype=torch.int),
+            min_length=2, 
+            max_new_tokens=1,
         ).squeeze()
 
         initial_decoder_input_length = len(one_tok_gen) - 1
-        
+
         stopping_criteria = stop_sequences_criteria(
             self.tokenizer, stop, initial_decoder_input_length, input_ids.shape[0]
         )
+
         generations = self.model.generate(
             input_ids=input_ids,
             attention_mask=attention_mask,
@@ -514,12 +521,13 @@ class MultiTokenEOSCriteria(transformers.StoppingCriteria):
     """
     Criteria to stop on the specified multi-token sequence.
     """
-    
+
     def __init__(
-        self, sequence: str, 
+        self, 
+        sequence: str, 
         tokenizer: transformers.PreTrainedTokenizer, 
         initial_decoder_input_length: int, 
-        batch_size: int
+        batch_size: int,
     ):
         self.initial_decoder_input_length = initial_decoder_input_length
         self.done_tracker = [False] * batch_size
@@ -527,27 +535,32 @@ class MultiTokenEOSCriteria(transformers.StoppingCriteria):
         self.sequence_ids = tokenizer.encode(sequence, add_special_tokens=False)
         self.sequence_id_len = len(self.sequence_ids)
 
-    def __call__(
-        self, input_ids, scores, **kwargs
-    ) -> bool:
+    def __call__(self, input_ids, scores, **kwargs) -> bool:
         # For efficiency, we compare the last n tokens where n is the number of tokens in the stop_sequence
-        lookback_ids_batch = input_ids[:, self.initial_decoder_input_length:][:, -self.sequence_id_len:]
+        lookback_ids_batch = input_ids[:, self.initial_decoder_input_length :][
+            :, -self.sequence_id_len :
+        ]
         
         for i, done in enumerate(self.done_tracker):
             if not done:
-                self.done_tracker[i] = self.sequence_ids == lookback_ids_batch[i].tolist()
-        
+                self.done_tracker[i] = (
+                    self.sequence_ids == lookback_ids_batch[i].tolist()
+                )        
         return False not in self.done_tracker
 
 
 def stop_sequences_criteria(
-    tokenizer: transformers.PreTrainedTokenizer, stop_sequences: List[str], initial_decoder_input_length: int, batch_size: int
+    tokenizer: transformers.PreTrainedTokenizer,
+    stop_sequences: List[str],
+    initial_decoder_input_length: int,
+    batch_size: int,
 ) -> transformers.StoppingCriteriaList:
     return transformers.StoppingCriteriaList(
         [
             *[
-                MultiTokenEOSCriteria(sequence, tokenizer, initial_decoder_input_length, batch_size)
-                for sequence in stop_sequences
+                MultiTokenEOSCriteria(
+                    sequence, tokenizer, initial_decoder_input_length, batch_size
+                )
             ],
         ]
     )
