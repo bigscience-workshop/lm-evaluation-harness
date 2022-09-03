@@ -13,9 +13,10 @@ _DeviceMapping = NewType("DeviceMapping", Mapping[str, Union[int, str, torch.dev
 
 
 def _get_accelerate_args(
-    max_memory_per_gpu: Optional[Union[int, str]],
-    max_cpu_memory: Optional[Union[int, str]],
-    offload_folder: Optional[str],
+    device_map_option: Optional[str] = "auto",
+    max_memory_per_gpu: Optional[Union[int, str]] = None,
+    max_cpu_memory: Optional[Union[int, str]] = None,
+    offload_folder: Optional[str] = "./offload",
 ) -> dict:
     """Returns the kwargs needed to apply `accelerate` in `AutoModel.from_pretrained`."""
     max_memory = {}
@@ -31,7 +32,7 @@ def _get_accelerate_args(
     args = {}
     if max_memory:
         args["max_memory"] = max_memory
-    args["device_map"] = "auto"
+    args["device_map"] = device_map_option
     args["offload_folder"] = offload_folder
     return args
 
@@ -65,10 +66,10 @@ class HuggingFaceAutoLM(TokenLM):
         subfolder: Optional[str] = None,
         revision: Optional[str] = "main",
         batch_size: Optional[int] = 1,
-        min_length: Optional[int] = None,
         max_gen_toks: Optional[int] = 256,
         max_length: Optional[int] = None,
         use_accelerate: Optional[bool] = False,
+        device_map_option: Optional[str] = "auto",
         max_memory_per_gpu: Optional[Union[int, str]] = None,
         max_cpu_memory: Optional[Union[int, str]] = None,
         offload_folder: Optional[str] = "./offload",
@@ -80,6 +81,12 @@ class HuggingFaceAutoLM(TokenLM):
         :param use_accelerate:
             If True, uses the `accelerate` library to load a large model across
             multiple devices.
+        :param device_map_option: Optional[str]
+            The device map option to use when loading the model with `accelerate`.
+            Options:
+                "auto", "balanced", "balanced_low_0", "sequential"
+            See the `accelerate` docs for more details on these options:
+            https://huggingface.co/docs/accelerate/v0.12.0/en/usage_guides/big_modeling#designing-a-device-map
         :param max_memory_per_gpu: Optional[Union[int, str]]
             The maximum memory available for each GPU in bytes as `int` or in
             the format f"{significand}{unit_symbol}" where {unit_symbol} is
@@ -107,7 +114,6 @@ class HuggingFaceAutoLM(TokenLM):
 
         self._batch_size = batch_size  # TODO: Adaptive batch size
         self._max_gen_toks = max_gen_toks
-        self.min_length = min_length
         self._max_length = max_length
         self._config = transformers.AutoConfig.from_pretrained(pretrained)
 
@@ -122,7 +128,10 @@ class HuggingFaceAutoLM(TokenLM):
         accelerate_kwargs = {}
         if use_accelerate:
             accelerate_kwargs = _get_accelerate_args(
-                max_memory_per_gpu, max_cpu_memory, offload_folder
+                device_map_option,
+                max_memory_per_gpu,
+                max_cpu_memory,
+                offload_folder,
             )
         self.model = self._create_auto_model(
             pretrained=pretrained,
@@ -176,8 +185,7 @@ class HuggingFaceAutoLM(TokenLM):
         """Returns a pre-trained tokenizer from a pre-trained tokenizer configuration."""
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             pretrained if tokenizer is None else tokenizer,
-            revision=revision,
-            subfolder=subfolder,
+            revision=revision + ("/" + subfolder if subfolder is not None else ""),
         )
         tokenizer.pad_token = tokenizer.eos_token
         return tokenizer
@@ -270,25 +278,17 @@ class HuggingFaceAutoLM(TokenLM):
             else:
                 max_tokens = max_generation_length
 
-            # Ensure that the context does not encroach into the `space`
-            # for the generation.
             token_context = self.tok_encode_batch(context)
-            input_ids = token_context["input_ids"][
-                :, self.max_gen_toks - self.max_length :
-            ].to(self.device)
-            attention_mask = token_context["attention_mask"][
-                :, self.max_gen_toks - self.max_length :
-            ].to(self.device)
 
             responses = self._model_generate(
-                inputs={"input_ids": input_ids, "attention_mask": attention_mask},
+                inputs=token_context,
                 max_tokens=max_tokens,
-                min_length=self.min_length,
                 stop=until,
             )
             responses = self.tok_decode(responses.tolist())
 
             for response in responses:
+                # Ensure the generated responses do not contain the stop sequences.
                 for term in until:
                     response = response.split(term)[0]
                 # partial caching
@@ -329,18 +329,29 @@ class AutoCausalLM(HuggingFaceAutoLM):
 
     def _model_generate(
         self,
-        inputs: TokenSequence,
+        inputs: transformers.BatchEncoding,
         max_tokens: int,
-        min_length: int = None,
         stop: Optional[List[str]] = None,
     ) -> TokenSequence:
-        stopping_criteria = stop_sequences_criteria(self.tokenizer, stop)
+        # Ensure that the context does not encroach into the `space`
+        # for the generation.
+        input_ids = inputs["input_ids"][:, self.max_gen_toks - self.max_length :]
+        attention_mask = inputs["attention_mask"][
+            :, self.max_gen_toks - self.max_length :
+        ]
+        input_ids = input_ids.to(self.device)
+        attention_mask = attention_mask.to(self.device)
+
+        stopping_criteria = stop_sequences_criteria(
+            self.tokenizer, stop, input_ids.shape[1], input_ids.shape[0]
+        )
+
         generations = self.model.generate(
-            **inputs,
+            input_ids=input_ids,
+            attention_mask=attention_mask,
             # GPT style models require the `generate` `max_length` arg to include the
             # context length, so we instead set `max_new_tokens` which is the number
             # of new tokens to generate, excluding the current number of tokens.
-            min_length=min_length,
             max_new_tokens=max_tokens,
             stopping_criteria=stopping_criteria,
             do_sample=False,
@@ -479,16 +490,31 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
 
     def _model_generate(
         self,
-        inputs: TokenSequence,
+        inputs: transformers.BatchEncoding,
         max_tokens: int,
-        min_length: int = None,
         stop: Optional[List[str]] = None,
-    ) -> Union[TokenSequence, List[str]]:
-        stopping_criteria = stop_sequences_criteria(self.tokenizer, stop)
+    ) -> TokenSequence:
+        input_ids = inputs["input_ids"][:, -self.max_length :].to(self.device)
+        attention_mask = inputs["attention_mask"][:, -self.max_length :].to(self.device)
+
+        # Generate one token to calculate the number of start tokens prepended to decoder_input_ids
+        # (leaving this here in case the below assumption is violated in the future)
+        # one_tok_gen = self.model.generate(
+        #    input_ids=torch.zeros((1, 1), dtype=torch.int),
+        #    min_length=2,
+        #    max_new_tokens=1,
+        # ).squeeze()
+        # initial_decoder_input_length = len(one_tok_gen) - 1
+
+        # Assume that there will always only be one token in the decoder inputs, assumption holds for existing HF models
+        stopping_criteria = stop_sequences_criteria(
+            self.tokenizer, stop, 1, input_ids.shape[0]
+        )
+
         generations = self.model.generate(
-            **inputs,
-            min_length=min_length,
-            max_length=max_tokens,
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            max_new_tokens=max_tokens,
             stopping_criteria=stopping_criteria,
             do_sample=False,
         )
@@ -496,30 +522,50 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
 
 
 class MultiTokenEOSCriteria(transformers.StoppingCriteria):
-    """Criteria to stop on the specified multi-token sequence."""
+    """
+    Criteria to stop on the specified multi-token sequence.
+    """
 
-    def __init__(self, sequence: str, tokenizer: transformers.PreTrainedTokenizer):
+    def __init__(
+        self,
+        sequence: str,
+        tokenizer: transformers.PreTrainedTokenizer,
+        initial_decoder_input_length: int,
+        batch_size: int,
+    ):
+        self.initial_decoder_input_length = initial_decoder_input_length
+        self.done_tracker = [False] * batch_size
         self.sequence = sequence
-        self.sequence_id = tokenizer.encode(sequence)
-        self.sequence_id_len = len(self.sequence_id) + 1
+        self.sequence_ids = tokenizer.encode(sequence, add_special_tokens=False)
+        self.sequence_id_len = len(self.sequence_ids)
         self.tokenizer = tokenizer
 
-    def __call__(
-        self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
-    ) -> bool:
-        last_token_id = input_ids[0, -self.sequence_id_len :]
-        last_tokens = self.tokenizer.decode(last_token_id)
-        is_stopped = self.sequence in last_tokens
-        return is_stopped
+    def __call__(self, input_ids, scores, **kwargs) -> bool:
+        # For efficiency, we compare the last n tokens where n is the number of tokens in the stop_sequence
+        lookback_ids_batch = input_ids[:, self.initial_decoder_input_length :][
+            :, -self.sequence_id_len :
+        ]
+
+        lookback_tokens_batch = self.tokenizer.batch_decode(lookback_ids_batch)
+
+        for i, done in enumerate(self.done_tracker):
+            if not done:
+                self.done_tracker[i] = self.sequence in lookback_tokens_batch[i]
+        return False not in self.done_tracker
 
 
 def stop_sequences_criteria(
-    tokenizer: transformers.PreTrainedTokenizer, stop_sequences: List[str]
+    tokenizer: transformers.PreTrainedTokenizer,
+    stop_sequences: List[str],
+    initial_decoder_input_length: int,
+    batch_size: int,
 ) -> transformers.StoppingCriteriaList:
     return transformers.StoppingCriteriaList(
         [
             *[
-                MultiTokenEOSCriteria(sequence, tokenizer)
+                MultiTokenEOSCriteria(
+                    sequence, tokenizer, initial_decoder_input_length, batch_size
+                )
                 for sequence in stop_sequences
             ],
         ]

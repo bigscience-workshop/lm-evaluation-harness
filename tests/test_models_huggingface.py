@@ -1,14 +1,17 @@
 import unittest.mock as mock
+import logging
 import pytest
 
 import lm_eval.models
 from lm_eval.api.utils import set_seed
 
 
+logger = logging.getLogger(__name__)
+
+
 # Only use cpu to avoid non-deterministic CUDA settings.
 # See: https://pytorch.org/docs/stable/notes/randomness.html
 _DEVICE = "cpu"
-_SEED = 42
 
 
 @pytest.mark.parametrize(
@@ -24,29 +27,45 @@ _SEED = 42
         ),
     ],
 )
-def test_stop_sequences(stop_sequences, test_input, expected):
-    set_seed(_SEED)
+def test_causal_stop_sequences(stop_sequences, test_input, expected):
+    set_seed()
     causal_model = lm_eval.models.get_model(
         "hf-causal", pretrained="gpt2", device=_DEVICE
     )
     inputs = causal_model.tok_encode_batch([test_input])
-    input_ids = inputs["input_ids"][
-        :, causal_model.max_gen_toks - causal_model.max_length :
-    ].to(_DEVICE)
-    attention_mask = inputs["attention_mask"][
-        :, causal_model.max_gen_toks - causal_model.max_length :
-    ].to(_DEVICE)
     generations = causal_model._model_generate(
-        inputs={"input_ids": input_ids, "attention_mask": attention_mask},
+        inputs=inputs,
         max_tokens=20,
         stop=stop_sequences,
     )
-    generations = causal_model.tokenizer.decode(generations[0])
+    generations = causal_model.tok_decode(generations)[0]
+    assert test_input + generations == expected
+
+
+@pytest.mark.parametrize(
+    "stop_sequences,test_input,expected",
+    [
+        (["symbiosis"], "bigscience is ", "bigscience is a symbiosis"),
+        (["of"], "which is ", "which is a symphony of"),
+        (["</s>"], "which is ", "which is a symphony of a symphony of a "),
+    ],
+)
+def test_seq2seq_stop_sequences(stop_sequences, test_input, expected):
+    seq2seq_model = lm_eval.models.get_model(
+        "hf-seq2seq", pretrained="google/t5-small-lm-adapt", device=_DEVICE
+    )
+    inputs = seq2seq_model.tok_encode_batch([test_input])
+    generations = seq2seq_model._model_generate(
+        inputs=inputs,
+        max_tokens=20,
+        stop=stop_sequences,
+    )
+    generations = seq2seq_model.tok_decode(generations)[0]
     assert test_input + generations == expected
 
 
 def test_causal_model():
-    set_seed(_SEED)
+    set_seed()
     causal_model = lm_eval.models.get_model(
         "hf-causal",
         pretrained="gpt2",
@@ -140,6 +159,7 @@ def test_causal_model():
 
 
 def test_causal_model_perplexity():
+    set_seed()
     causal_model = lm_eval.models.get_model_from_args_string(
         model_api_name="hf-causal", model_args=f"device={_DEVICE},pretrained=gpt2"
     )
@@ -178,7 +198,7 @@ def test_causal_model_perplexity():
             model_api_name="hf-causal", model_args=f"device={_DEVICE},pretrained=gpt2"
         )
         perplexity = causal_model.loglikelihood_rolling([(test_string,)])[0]
-        print(perplexity)
+        logger.info(perplexity)
     tgt = sum(
         [
             -4.96001,

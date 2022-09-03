@@ -1,10 +1,8 @@
 import collections
 import pathlib
-import random
 import re
 import sys
 import numpy
-import pytest
 import torch
 from typing import Callable, Iterable, List, Tuple, Union
 from transformers import set_seed as transformers_set_seed
@@ -17,13 +15,20 @@ class ExitCodeError(Exception):
     pass
 
 
-def set_seed(seed: int) -> None:
-    """Set all the random seeds."""
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    random.seed(seed)
-    transformers_set_seed(seed)
-    numpy.random.seed(seed)
+# Reproducibility utils
+
+
+def get_seed() -> int:
+    """Returns a hard-coded global seed for reproducibility."""
+    return 1234
+
+
+def set_seed() -> None:
+    transformers_set_seed(get_seed())
+
+
+def get_rng() -> numpy.random.Generator:
+    return numpy.random.default_rng(get_seed())
 
 
 # Token Utils
@@ -315,6 +320,8 @@ def find_test_root(*, start_path: pathlib.Path) -> pathlib.Path:
 
 def run_task_tests(*, task_list: List[str]):
     """Find the package root and run the tests for the given tasks."""
+    import pytest
+
     package_root = find_test_root(start_path=pathlib.Path(__file__))
     task_string = " or ".join(task_list)
     args = [
