@@ -374,7 +374,6 @@ class CachingLM:
             Path to cache db
         """
         from sqlitedict import SqliteDict
-        
         self.lm = lm
         if os.path.dirname(cache_db):
             os.makedirs(os.path.dirname(cache_db), exist_ok=True)
