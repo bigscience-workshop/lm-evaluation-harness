@@ -95,7 +95,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def args_to_name(args, separator=":"):
+def args_to_name(args, separator):
     """Map `args` to file name. If output_path is set, we use that instead."""
     if args.output_path is not None:
         return args.output_path
@@ -120,7 +120,7 @@ def args_to_name(args, separator=":"):
         "fewshot": str(args.num_fewshot),
         "batchsize": str(args.batch_size),
         "seed": str(utils.get_seed()),
-        "timestamp": datetime.datetime.now().isoformat(),
+        "timestamp": datetime.datetime.now().isoformat("T", "seconds"),
     }
     fields = [f"{k}={v}" for k, v in fields.items() if v is not None]
     # Some prompts also have "/" in them!
@@ -132,7 +132,7 @@ def args_to_name(args, separator=":"):
     return filename
 
 
-def setup_example_logger(output_path, separator=":"):
+def setup_example_logger(output_path, separator):
     """Sets up a logger that will save each example and prediction."""
     example_logger = logging.getLogger("examples")
     filename = f"./outputs/examples{separator}{output_path}.jsonl"
@@ -156,8 +156,8 @@ def main():
     template_names = utils.cli_template_names(
         args.task_name, args.template_names, args.template_idx
     )
-    output_path = args_to_name(args)
-    path_separator = ":"
+    path_separator = "."
+    output_path = args_to_name(args, separator=path_separator)
     setup_example_logger(output_path, path_separator)
 
     print()  # Ensure a newline after `main` command.
