@@ -230,10 +230,7 @@ class HuggingFaceAutoLM(TokenLM):
         """Whether to include special tokens in encoded text. This should be
         determined by whether or not the model was trained with special tokens.
 
-        TODO (jon-tow): Make this customizable for users after the BigScience
-        paper is released.
-
-        NOTE: This is a hard-coded hack until HuggingFace supports a way to
+        TODO: This is a hard-coded hack. Update once HuggingFace supports a way to
         check whether or not an arbitrary model was trained with special tokens.
         """
         raise NotImplementedError()
