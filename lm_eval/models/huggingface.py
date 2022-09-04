@@ -378,6 +378,36 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
             return self._max_length
         return self._DEFAULT_MAX_LENGTH
 
+    @property
+    def _is_trained_with_special_tokens(self) -> bool:
+        """NOTE: This is a hard-coded hack until HuggingFace supports a way to
+        check whether or not an arbitrary Seq2Seq model was pre-trained with
+        special tokens.
+        Currently, this only detects T0 models which are not pre-trained with
+        special tokens.
+        """
+        is_T0 = (
+            isinstance(self.model, transformers.T5ForConditionalGeneration)
+            and "T0" in self.model.name_or_path
+        )
+        if is_T0:
+            return False
+        return True
+
+    def tok_encode(self, string: str) -> TokenSequence:
+        # TODO: Merge `tok_encode_batch` here.
+        return self.tokenizer.encode(
+            string, add_special_tokens=self._is_trained_with_special_tokens
+        )
+
+    def tok_encode_batch(self, strings: List[str]) -> TokenSequence:
+        return self.tokenizer(
+            strings,
+            padding=True,
+            add_special_tokens=self._is_trained_with_special_tokens,
+            return_tensors="pt",
+        )
+
     def loglikelihood(
         self, requests: List[Tuple[str, str]]
     ) -> List[Tuple[float, bool]]:
