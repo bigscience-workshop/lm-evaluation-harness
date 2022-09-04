@@ -2,6 +2,7 @@ import math
 import torch
 import torch.nn.functional as F
 import transformers
+from abc import abstractproperty
 from typing import List, Mapping, NewType, Optional, Tuple, Union
 from tqdm import tqdm
 
@@ -224,6 +225,19 @@ class HuggingFaceAutoLM(TokenLM):
             return self.tokenizer.model_max_length
         return self._DEFAULT_MAX_LENGTH
 
+    @abstractproperty
+    def add_special_tokens(self) -> bool:
+        """Whether to include special tokens in encoded text. This should be
+        determined by whether or not the model was trained with special tokens.
+
+        TODO (jon-tow): Make this customizable for users after the BigScience
+        paper is released.
+
+        NOTE: This is a hard-coded hack until HuggingFace supports a way to
+        check whether or not an arbitrary model was trained with special tokens.
+        """
+        raise NotImplementedError()
+
     @property
     def batch_size(self) -> int:
         # TODO: Add adaptive batch size.
@@ -235,11 +249,14 @@ class HuggingFaceAutoLM(TokenLM):
 
     def tok_encode(self, string: str) -> TokenSequence:
         # TODO: Merge `tok_encode_batch` here.
-        return self.tokenizer.encode(string, add_special_tokens=False)
+        return self.tokenizer.encode(string, add_special_tokens=self.add_special_tokens)
 
     def tok_encode_batch(self, strings: List[str]) -> TokenSequence:
         return self.tokenizer(
-            strings, padding=True, add_special_tokens=False, return_tensors="pt"
+            strings,
+            padding=True,
+            add_special_tokens=self.add_special_tokens,
+            return_tensors="pt",
         )
 
     def tok_decode(self, tokens: torch.LongTensor) -> List[str]:
@@ -304,6 +321,10 @@ class AutoCausalLM(HuggingFaceAutoLM):
     """
 
     AUTO_MODEL_CLASS = transformers.AutoModelForCausalLM
+
+    @property
+    def add_special_tokens(self) -> bool:
+        return False
 
     def _create_auto_tokenizer(
         self,
@@ -377,6 +398,16 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
         if self._max_length is not None:
             return self._max_length
         return self._DEFAULT_MAX_LENGTH
+
+    @property
+    def add_special_tokens(self) -> bool:
+        not_trained_with_special_tokens = (
+            isinstance(self.model, transformers.T5ForConditionalGeneration)
+            and "T0" in self.model.name_or_path
+        )
+        if not_trained_with_special_tokens:
+            return False
+        return True
 
     def loglikelihood(
         self, requests: List[Tuple[str, str]]
