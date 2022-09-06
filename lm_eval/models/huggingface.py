@@ -2,7 +2,6 @@ import math
 import torch
 import torch.nn.functional as F
 import transformers
-from abc import abstractproperty
 from typing import List, Mapping, NewType, Optional, Tuple, Union
 from tqdm import tqdm
 
@@ -69,6 +68,7 @@ class HuggingFaceAutoLM(TokenLM):
         batch_size: Optional[int] = 1,
         max_gen_toks: Optional[int] = 256,
         max_length: Optional[int] = None,
+        add_special_tokens: Optional[bool] = None,
         use_accelerate: Optional[bool] = False,
         device_map_option: Optional[str] = "auto",
         max_memory_per_gpu: Optional[Union[int, str]] = None,
@@ -79,6 +79,10 @@ class HuggingFaceAutoLM(TokenLM):
     ):
         """Initializes a HuggingFace `AutoModel` and `AutoTokenizer` for evaluation.
 
+        :param add_special_tokens:
+            Whether to add special tokens to the input sequences. If `None`, the
+            default value will be set to `True` for seq2seq models (e.g. T5) and
+            `False` for causal models.
         :param use_accelerate:
             If True, uses the `accelerate` library to load a large model across
             multiple devices.
@@ -118,6 +122,7 @@ class HuggingFaceAutoLM(TokenLM):
         self._max_length = max_length
         self._config = transformers.AutoConfig.from_pretrained(pretrained)
 
+        self._add_special_tokens = add_special_tokens
         self.tokenizer = self._create_auto_tokenizer(
             pretrained=pretrained,
             revision=revision,
@@ -192,6 +197,27 @@ class HuggingFaceAutoLM(TokenLM):
         return tokenizer
 
     @property
+    def add_special_tokens(self) -> bool:
+        """Whether to include special tokens in encoded text. This should be
+        determined by whether or not the model was trained with special tokens.
+
+        TODO: Remove these conditionals once HuggingFace supports a way to
+        check whether or not an arbitrary model was trained with special tokens.
+        """
+        if self._add_special_tokens is not None:
+            return self._add_special_tokens
+        elif self.AUTO_MODEL_CLASS is transformers.AutoModelForCausalLM:
+            return False
+        elif self.AUTO_MODEL_CLASS is transformers.AutoModelForSeq2SeqLM:
+            return True
+        else:
+            raise ValueError(
+                "Could not determine `add_special_tokens` value from the model "
+                "class. Set to `True` or `False` depending on whether the model "
+                "was pre-trained with special tokens."
+            )
+
+    @property
     def eot_token(self) -> str:
         return self.tokenizer.eos_token
 
@@ -224,16 +250,6 @@ class HuggingFaceAutoLM(TokenLM):
         if hasattr(self.tokenizer, "model_max_length"):
             return self.tokenizer.model_max_length
         return self._DEFAULT_MAX_LENGTH
-
-    @abstractproperty
-    def add_special_tokens(self) -> bool:
-        """Whether to include special tokens in encoded text. This should be
-        determined by whether or not the model was trained with special tokens.
-
-        TODO: This is a hard-coded hack. Update once HuggingFace supports a way to
-        check whether or not an arbitrary model was trained with special tokens.
-        """
-        raise NotImplementedError()
 
     @property
     def batch_size(self) -> int:
@@ -319,10 +335,6 @@ class AutoCausalLM(HuggingFaceAutoLM):
 
     AUTO_MODEL_CLASS = transformers.AutoModelForCausalLM
 
-    @property
-    def add_special_tokens(self) -> bool:
-        return False
-
     def _create_auto_tokenizer(
         self,
         *,
@@ -395,16 +407,6 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
         if self._max_length is not None:
             return self._max_length
         return self._DEFAULT_MAX_LENGTH
-
-    @property
-    def add_special_tokens(self) -> bool:
-        not_trained_with_special_tokens = (
-            isinstance(self.model, transformers.T5ForConditionalGeneration)
-            and "T0" in self.model.name_or_path
-        )
-        if not_trained_with_special_tokens:
-            return False
-        return True
 
     def loglikelihood(
         self, requests: List[Tuple[str, str]]
