@@ -83,6 +83,8 @@ class HuggingFaceAutoLM(TokenLM):
             Whether to add special tokens to the input sequences. If `None`, the
             default value will be set to `True` for seq2seq models (e.g. T5) and
             `False` for causal models.
+            WARNING: Evaluating causal models with `add_special_tokens=True` is
+            currently __not__ supported.
         :param use_accelerate:
             If True, uses the `accelerate` library to load a large model across
             multiple devices.
@@ -116,6 +118,15 @@ class HuggingFaceAutoLM(TokenLM):
         assert isinstance(pretrained, str)
         assert isinstance(device, str)
         assert isinstance(batch_size, int)
+        if add_special_tokens is not None:
+            # TODO: Support evaluating causal models with special tokens. Currently,
+            # this is not possible because the `_loglikelihood_tokens()` method for
+            # causal LMs makes a no-special-tokens assumption given that contexts
+            # and labels/continuations are tokenized separately without special
+            # tokens, concatenated, and then processed as inputs.
+            assert (
+                self.AUTO_MODEL_CLASS is not transformers.AutoModelForCausalLM
+            ), "Evaluating causal models with `add_special_tokens=True` is currently not supported."
 
         self._batch_size = batch_size  # TODO: Adaptive batch size
         self._max_gen_toks = max_gen_toks
