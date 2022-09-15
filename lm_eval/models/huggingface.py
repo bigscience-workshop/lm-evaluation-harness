@@ -52,7 +52,8 @@ def _get_dtype(
 
 
 class HuggingFaceAutoLM(TokenLM):
-
+    AUTO_CONFIG_CLASS: transformers.AutoConfig = transformers.AutoConfig
+    AUTO_TOKENIZER_CLASS: transformers.AutoTokenizer = transformers.AutoTokenizer
     AUTO_MODEL_CLASS: transformers.AutoModel = None
 
     # Default max sequence length setting for when no `max_length` is provided
@@ -68,6 +69,7 @@ class HuggingFaceAutoLM(TokenLM):
         batch_size: Optional[int] = 1,
         max_gen_toks: Optional[int] = 256,
         max_length: Optional[int] = None,
+        add_special_tokens: Optional[bool] = None,
         use_accelerate: Optional[bool] = False,
         device_map_option: Optional[str] = "auto",
         max_memory_per_gpu: Optional[Union[int, str]] = None,
@@ -78,45 +80,73 @@ class HuggingFaceAutoLM(TokenLM):
     ):
         """Initializes a HuggingFace `AutoModel` and `AutoTokenizer` for evaluation.
 
-        :param use_accelerate:
-            If True, uses the `accelerate` library to load a large model across
-            multiple devices.
-        :param device_map_option: Optional[str]
-            The device map option to use when loading the model with `accelerate`.
-            Options:
-                "auto", "balanced", "balanced_low_0", "sequential"
-            See the `accelerate` docs for more details on these options:
-            https://huggingface.co/docs/accelerate/v0.12.0/en/usage_guides/big_modeling#designing-a-device-map
-        :param max_memory_per_gpu: Optional[Union[int, str]]
-            The maximum memory available for each GPU in bytes as `int` or in
-            the format f"{significand}{unit_symbol}" where {unit_symbol} is
-            any of ["GB", "MB", "GIB", "MIB"]. Refer to the `max_memory` arg in
-            the "Parameters for big model inference" section of the following docs:
-            https://huggingface.co/docs/transformers/v4.20.1/en/main_classes/model#large-model-loading
-        :param max_cpu_memory: Optional[Union[int, str]]
-            The maximum available CPU RAM in bytes as `int` or in the format
-            f"{significand}{unit_symbol}" where {unit_symbol} is any of
-            ["GB", "MB", "GIB", "MIB"]. Refer to the `max_memory` arg in the
-            "Parameters for big model inference" section of the following docs:
-            https://huggingface.co/docs/transformers/v4.20.1/en/main_classes/model#large-model-loading
-        :param offload_folder: Optional[str]
-            The folder to offload weights into if `device_map` contains any "disk" value.
-        :param dtype: Optional[Union[str, torch.dtype]]
-            Converts the model weights to `dtype`, if specified. Strings get
-            converted to `torch.dtype` objects (e.g. `float16` -> `torch.float16`).
-            Use `dtype="auto"` to derive the type from the model’s weights.
+        Args:
+            pretrained (str):
+                The HuggingFace Hub model ID name or the path to a pre-trained
+                model to load. This is effectively the `pretrained_model_name_or_path`
+                argument of `from_pretrained` in the HuggingFace `transformers` API.
+            add_special_tokens (bool, optional, defaults to True):
+                Whether to add special tokens to the input sequences. If `None`, the
+                default value will be set to `True` for seq2seq models (e.g. T5) and
+                `False` for causal models.
+
+                WARNING: Evaluating causal models with `add_special_tokens=True` is
+                currently __not__ supported.
+
+            > Large model loading `accelerate` arguments
+
+            use_accelerate (bool, optional, defaults to False):
+                If True, uses the `accelerate` library to load a large model across
+                multiple devices.
+            device_map_option (str, optional, defaults to "auto"):
+                The device map option to use when loading the model with
+                `accelerate`.
+                Options:
+                    "auto", "balanced", "balanced_low_0", "sequential"
+                See the `accelerate` docs for more details on these options:
+                https://huggingface.co/docs/accelerate/v0.12.0/en/usage_guides/big_modeling#designing-a-device-map
+            max_memory_per_gpu (Union[int, str], optional, defaults to None):
+                The maximum memory available for each GPU in bytes as `int` or in
+                the format f"{significand}{unit_symbol}" where {unit_symbol} is
+                any of ["GB", "MB", "GIB", "MIB"]. Refer to the `max_memory` arg in
+                the "Parameters for big model inference" section of the following
+                docs:
+                https://huggingface.co/docs/transformers/v4.20.1/en/main_classes/model#large-model-loading
+            max_cpu_memory (Union[int, str], optional, defaults to None):
+                The maximum available CPU RAM in bytes as `int` or in the format
+                f"{significand}{unit_symbol}" where {unit_symbol} is any of
+                ["GB", "MB", "GIB", "MIB"]. Refer to the `max_memory` arg in the
+                "Parameters for big model inference" section of the following docs:
+                https://huggingface.co/docs/transformers/v4.20.1/en/main_classes/model#large-model-loading
+            offload_folder (str, optional, defaults to "./offload"):
+                The folder to offload weights into if `device_map` contains any
+                "disk" value.
+            dtype (Union[str, torch.dtype], optional, defaults to None):):
+                Converts the model weights to `dtype`, if specified. Strings get
+                converted to `torch.dtype` objects (e.g. `float16` -> `torch.float16`).
+                Use `dtype="auto"` to derive the type from the model’s weights.
         """
         super().__init__()
 
         assert isinstance(pretrained, str)
         assert isinstance(device, str)
         assert isinstance(batch_size, int)
+        if add_special_tokens is not None:
+            # TODO: Support evaluating causal models with special tokens. Currently,
+            # this is not possible because the `_loglikelihood_tokens()` method for
+            # causal LMs makes a no-special-tokens assumption given that contexts
+            # and labels/continuations are tokenized separately without special
+            # tokens, concatenated, and then processed as inputs.
+            assert (
+                self.AUTO_MODEL_CLASS is not transformers.AutoModelForCausalLM
+            ), "Evaluating causal models with `add_special_tokens=True` is currently not supported."
 
         self._batch_size = batch_size  # TODO: Adaptive batch size
         self._max_gen_toks = max_gen_toks
         self._max_length = max_length
-        self._config = transformers.AutoConfig.from_pretrained(pretrained)
+        self._config = self.AUTO_CONFIG_CLASS.from_pretrained(pretrained)
 
+        self._add_special_tokens = add_special_tokens
         self.tokenizer = self._create_auto_tokenizer(
             pretrained=pretrained,
             revision=revision,
@@ -183,12 +213,33 @@ class HuggingFaceAutoLM(TokenLM):
         tokenizer: Optional[str] = None,
     ) -> transformers.PreTrainedTokenizer:
         """Returns a pre-trained tokenizer from a pre-trained tokenizer configuration."""
-        tokenizer = transformers.AutoTokenizer.from_pretrained(
+        tokenizer = self.AUTO_TOKENIZER_CLASS.from_pretrained(
             pretrained if tokenizer is None else tokenizer,
             revision=revision + ("/" + subfolder if subfolder is not None else ""),
         )
         tokenizer.pad_token = tokenizer.eos_token
         return tokenizer
+
+    @property
+    def add_special_tokens(self) -> bool:
+        """Whether to include special tokens in encoded text. This should be
+        determined by whether or not the model was trained with special tokens.
+
+        TODO: Remove these conditionals once HuggingFace supports a way to
+        check whether or not an arbitrary model was trained with special tokens.
+        """
+        if self._add_special_tokens is not None:
+            return self._add_special_tokens
+        elif self.AUTO_MODEL_CLASS is transformers.AutoModelForCausalLM:
+            return False
+        elif self.AUTO_MODEL_CLASS is transformers.AutoModelForSeq2SeqLM:
+            return True
+        else:
+            raise ValueError(
+                "Could not determine `add_special_tokens` value from the model "
+                "class. Set to `True` or `False` depending on whether the model "
+                "was pre-trained with special tokens."
+            )
 
     @property
     def eot_token(self) -> str:
@@ -235,11 +286,14 @@ class HuggingFaceAutoLM(TokenLM):
 
     def tok_encode(self, string: str) -> TokenSequence:
         # TODO: Merge `tok_encode_batch` here.
-        return self.tokenizer.encode(string, add_special_tokens=False)
+        return self.tokenizer.encode(string, add_special_tokens=self.add_special_tokens)
 
     def tok_encode_batch(self, strings: List[str]) -> TokenSequence:
         return self.tokenizer(
-            strings, padding=True, add_special_tokens=False, return_tensors="pt"
+            strings,
+            padding=True,
+            add_special_tokens=self.add_special_tokens,
+            return_tensors="pt",
         )
 
     def tok_decode(self, tokens: torch.LongTensor) -> List[str]:
@@ -522,9 +576,7 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
 
 
 class MultiTokenEOSCriteria(transformers.StoppingCriteria):
-    """
-    Criteria to stop on the specified multi-token sequence.
-    """
+    """Criteria to stop on the specified multi-token sequence."""
 
     def __init__(
         self,

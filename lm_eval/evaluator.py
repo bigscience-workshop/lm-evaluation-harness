@@ -10,7 +10,7 @@ import lm_eval.models
 import lm_eval.tasks
 import lm_eval.api.metric
 import lm_eval.api.model
-from lm_eval.api.utils import set_seed, get_rng, get_seed
+from lm_eval.api.utils import DEFAULT_SEED, set_seed
 from lm_eval.api.task import Task
 
 
@@ -29,36 +29,43 @@ def cli_evaluate(
     device: Optional[str] = None,
     use_cache: Optional[bool] = False,
     bootstrap_iters: Optional[int] = 100000,
+    seed: Optional[int] = DEFAULT_SEED,
     limit: Optional[int] = None,
 ) -> dict:
     """Evaluate a model from an api on a given task with multiple possible prompt
-     formats. This is effectively a wrapper around `evaluate` for command-line
-     interface (CLI) like usage; only primitive type arguments.
+    formats. This is effectively a wrapper around `evaluate` for command-line
+    interface (CLI) like usage; only primitive type arguments.
 
-     :param model_api_name: str
-         Name of the language model api to use - see:
-             `lm_eval.models.list_model_apis`.
-    :param model_args: Optional[str]
-         String arguments for the model api - see:
-             `lm_eval.api.model.get_model_from_args_string`
-     :param task_name: str
-         The task name of the task to evaluate the model on.
-     :param template_names: List[str]
-         List of template names for the specified `task_name` to evaluate under.
-     :param num_fewshot: int
-         Number of examples in few-shot context.
-     :param batch_size: int, optional
-         Batch size for model.
-     :param device: str, optional
-         PyTorch device (e.g. "cpu" or "cuda:0") for running models.
-     :param use_cache: bool
-         Whether or not to use a cache for language model results.
-     :param bootstrap_iters:
-         Number of iterations for bootstrap statistics.
-     :param limit: int, optional
-         Limit the number of examples per task (only use this for testing).
-     :return
-         Dictionary of results
+    Args:
+        model_api_name (str):
+            Name of the language model api to use. See:
+                `lm_eval.models.list_model_apis`
+        model_args (str):
+            String arguments for the model api. See:
+                `lm_eval.api.model.get_model_from_args_string`
+        task_name (str):
+            The task name of the task to evaluate the model on.
+        template_names (List[str]):
+            List of template names for the specified `task_name` to evaluate
+            under.
+        num_fewshot (int, optional, defaults to 0):
+            Number of examples in few-shot context.
+        batch_size (int, optional, defaults to None):
+            Batch size to use for model evaluation.
+        device (str, optional, defaults to None):
+            PyTorch device (e.g. "cpu" or "cuda:0") for running models.
+        use_cache (bool, optional, defaults to False):
+            Whether or not to use a cache for language model results.
+        bootstrap_iters (int, optional, defaults to 100000):
+            Number of iterations for bootstrap statistics.
+        seed (int, optional, defaults to 1234 = `DEFAULT_SEED`):
+            Seed for pseudo-random number generation. This controls document
+            shuffling, few-shot prompt selection, and framework seeding.
+        limit (int, optional, defaults to None):
+            Limit the number of examples per task (only use this for testing).
+
+    Returns:
+        Dictionary of results.
     """
     tasks = lm_eval.tasks.get_task_list(task_name, template_names)
     model = lm_eval.models.get_model_from_args_string(
@@ -75,8 +82,9 @@ def cli_evaluate(
         model=model,
         tasks=tasks,
         num_fewshot=num_fewshot,
-        limit=limit,
         bootstrap_iters=bootstrap_iters,
+        seed=seed,
+        limit=limit,
     )
 
     # Add info about the model and few shot config.
@@ -89,7 +97,7 @@ def cli_evaluate(
         "use_cache": use_cache,
         "limit": limit,
         "bootstrap_iters": bootstrap_iters,
-        "seed": get_seed(),
+        "seed": seed,
     }
     return results
 
@@ -100,25 +108,32 @@ def evaluate(
     tasks: List[Task],
     num_fewshot: Optional[int] = 0,
     bootstrap_iters: Optional[int] = 100000,
+    seed: Optional[int] = DEFAULT_SEED,
     limit: Optional[int] = None,
 ) -> dict:
     """Instantiate and evaluate a model on a list of tasks.
 
-    :param model: lm_eval.api.model.LM
-        Language Model
-    :param tasks: List[Task]
-        List of tasks to evaluate `model` on.
-    :param num_fewshot: int
-        Number of examples in few-shot context
-    :param bootstrap_iters:
-        Number of iterations for bootstrap statistics
-    :param limit: int, optional
-        Limit the number of examples per task (only use this for testing)
-    :return
-        Dictionary of results
+    Args:
+        model (lm_eval.api.model.LM):
+            Language model API instance.
+        tasks (List[Task]):
+            List of tasks to evaluate `model` on.
+        num_fewshot (int, optional, defaults to 0):
+            Number of examples in the few-shot context.
+        bootstrap_iters (int, optional, defaults to 100000):
+            Number of iterations for bootstrap statistics.
+        seed (int, optional, defaults to 1234 = `DEFAULT_SEED`):
+            Seed for pseudo-random number generation. This controls document
+            shuffling, few-shot prompt selection, and framework seeding.
+        limit (int, optional, defaults to None):
+            Limit the number of examples per task.
+            WARNING: This is only for testing purposes.
+
+    Returns:
+        Dictionary of results.
     """
-    set_seed()
-    rng = get_rng()
+    set_seed(seed)
+    rng = np.random.default_rng(seed)
 
     # TODO: Completely refactor this entire function to not be a huge mess, ideally breaking it down into smaller pieces
     task_dict = {}
@@ -276,8 +291,12 @@ def make_table(results: dict) -> str:
     """Returns a markdown table from an evaluation results `dict`.
 
     Args:
-        results: A dict of results as found in the `"table_results"` key
-            of the dictionary returned by `evaluate`.
+        results (dict):
+            A dict of results as found in the `"table_results"` key of the
+            dictionary returned by `evaluate`.
+
+    Returns:
+        The markdown table of results as a string.
     """
     from pytablewriter import MarkdownTableWriter
 
