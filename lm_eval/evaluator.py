@@ -39,7 +39,7 @@ def cli_evaluate(
     Args:
         model_api_name (str):
             Name of the language model api to use. See:
-                `lm_eval.models.list_model_apis`.
+                `lm_eval.models.list_model_apis`
         model_args (str):
             String arguments for the model api. See:
                 `lm_eval.api.model.get_model_from_args_string`

@@ -246,8 +246,9 @@ class PromptSourceTask(Task):
                     for justification of this separator.
             text_target_separator (str, optional, defaults to ' '):
                 The string that will be used to separate the prompt example
-                from the target text. Example:
-                `Q: Where is the Eiffel Tower located? A:{text_target_separator}Paris`
+                from the target text.
+                Example:
+                    Q: Where is the Eiffel Tower located? A:{text_target_separator}Paris
         """
         super().__init__(data_dir, cache_dir, download_mode)
         self.prompt_template = prompt_template

@@ -240,7 +240,8 @@ def cli_template_names(
     """Returns a selection of template names for a given task and comma-
     separated string of template names.
 
-    Example: `cli_template_names("task", "A,B,C")` -> `["A", "B", "C"]`.
+    Example:
+        cli_template_names("task", "A,B,C") -> ["A", "B", "C"]
 
     Args:
         task_name (str):
