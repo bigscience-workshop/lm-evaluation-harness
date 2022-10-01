@@ -149,7 +149,7 @@ class HuggingFaceAutoLM(TokenLM):
         self._max_length = max_length
         self._config = self.AUTO_CONFIG_CLASS.from_pretrained(
             pretrained,
-            revision=revision + ("/" + subfolder if subfolder is not None else "")
+            revision=revision + ("/" + subfolder if subfolder is not None else ""),
         )
 
         self._add_special_tokens = add_special_tokens
