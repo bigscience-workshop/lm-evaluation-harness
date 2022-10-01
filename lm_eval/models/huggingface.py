@@ -148,7 +148,7 @@ class HuggingFaceAutoLM(TokenLM):
         self._max_gen_toks = max_gen_toks
         self._max_length = max_length
         self._config = self.AUTO_CONFIG_CLASS.from_pretrained(
-            pretrained, 
+            pretrained,
             revision=revision + ("/" + subfolder if subfolder is not None else "")
         )
 
