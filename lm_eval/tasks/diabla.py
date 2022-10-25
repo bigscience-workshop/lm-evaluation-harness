@@ -79,7 +79,7 @@ class DiaBLa_1_shot_context(PromptSourceTask):
 
     DATASET_PATH = "rbawden/DiaBLa"
     DATASET_NAME = None
-    
+
     def has_training_docs(self):
         return False
 
@@ -132,10 +132,12 @@ class DiaBLa_1_shot_context(PromptSourceTask):
         old_jinja = self.shot_prompt_template.jinja
         preamble = '{% set src_sent = ""%}'
         preamble += '{% set trg_sent = "" %}'
-        preamble += '{% if dialogue_history|length > 0 %}{% if utterance_meta.lang == dialogue_history[-1].utterance_meta.lang %}{% set src_sent = dialogue_history[-1].orig %}{% set trg_sent = dialogue_history[-1].ref %}{% else %}{% set src_sent = dialogue_history[-1].ref %}{% set trg_sent = dialogue_history[-1].orig %}{% endif %}{% endif %}'
-        self.shot_prompt_template.jinja = preamble +  old_jinja.replace('{{ orig }}', '{{ src_sent }}').replace('{{ ref }}', '{{ trg_sent }}')
+        preamble += "{% if dialogue_history|length > 0 %}{% if utterance_meta.lang == dialogue_history[-1].utterance_meta.lang %}{% set src_sent = dialogue_history[-1].orig %}{% set trg_sent = dialogue_history[-1].ref %}{% else %}{% set src_sent = dialogue_history[-1].ref %}{% set trg_sent = dialogue_history[-1].orig %}{% endif %}{% endif %}"
+        self.shot_prompt_template.jinja = preamble + old_jinja.replace(
+            "{{ orig }}", "{{ src_sent }}"
+        ).replace("{{ ref }}", "{{ trg_sent }}")
         return self.shot_prompt_template
-        
+
     def fewshot_examples(
         self,
         docs: datasets.Dataset,
@@ -181,7 +183,6 @@ class DiaBLa_1_shot_context(PromptSourceTask):
             rng is not None
         ), "A `numpy.random.Generator` argument must be provided to `rng`"
 
-        
         if num_fewshot == 0:
             labeled_examples = ""
             fewshot_idx, fewshot_target_idx, fewshot_src = ([], [], None)
@@ -209,7 +210,6 @@ class DiaBLa_1_shot_context(PromptSourceTask):
             # Leave an extra `example_separator` right before the prompt.
             labeled_examples += self.example_separator
 
-            
         prompt = self.doc_to_text(doc)
         ctx = labeled_examples + prompt
         logging_info = {

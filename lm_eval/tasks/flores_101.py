@@ -114,39 +114,46 @@ class Flores101MT_fewshot_wmt_fr2en(Flores101MT):
         self.text_target_separator = text_target_separator
         self.cache_dir = cache_dir
         self.download_mode = download_mode
-    
+
     def fewshot_docs(self) -> datasets.Dataset:
         """Returns a wmt dataset split"""
-        return datasets.load_dataset('wmt14', 'fr-en',
-            cache_dir=self.cache_dir, download_mode=self.download_mode,
-        )['validation']
+        return datasets.load_dataset(
+            "wmt14",
+            "fr-en",
+            cache_dir=self.cache_dir,
+            download_mode=self.download_mode,
+        )["validation"]
 
-    
+
 class Flores101MT_fewshot_fr2en(Flores101MT):
     VERSION = 0
     DATASET_PATH = "gsarti/flores_101"
     DATASET_NAME = "all"
 
     def fewshot_values(self):
-        return 'French', 'English', '{{ sentence_fra }}', '{{ sentence_eng }}'
-        
+        return "French", "English", "{{ sentence_fra }}", "{{ sentence_eng }}"
+
     # heuristically hack the prompt template used to create few-shot examples
     def get_fewshot_template(self):
         self.shot_prompt_template = copy.deepcopy(self.prompt_template)
 
         # get things to replace in the prompt
-        src_lang, trg_lang = self.prompt_template.name.split('-')[-2:]
-        src_sent, trg_sent = re.findall('{{ .+? }}', self.prompt_template.jinja)
+        src_lang, trg_lang = self.prompt_template.name.split("-")[-2:]
+        src_sent, trg_sent = re.findall("{{ .+? }}", self.prompt_template.jinja)
         # new attributes to drop in as replacement
         new_src_lang, new_trg_lang, new_src_sent, new_trg_sent = self.fewshot_values()
         # create new prompt
         assert len(re.findall(src_lang, self.shot_prompt_template.jinja)) == 1
         assert len(re.findall(trg_lang, self.shot_prompt_template.jinja)) == 1
-        for old_text, new_text in [(src_lang, new_src_lang),
-                                   (trg_lang, new_trg_lang),
-                                   (src_sent, new_src_sent),
-                                   (trg_sent, new_src_sent)]:
-            self.shot_prompt_template.jinja = self.shot_prompt_template.jinja.replace(old_text, new_text)
+        for old_text, new_text in [
+            (src_lang, new_src_lang),
+            (trg_lang, new_trg_lang),
+            (src_sent, new_src_sent),
+            (trg_sent, new_src_sent),
+        ]:
+            self.shot_prompt_template.jinja = self.shot_prompt_template.jinja.replace(
+                old_text, new_text
+            )
         return self.shot_prompt_template
 
     def fewshot_context(
@@ -172,7 +179,7 @@ class Flores101MT_fewshot_fr2en(Flores101MT):
         ), "A `numpy.random.Generator` argument must be provided to `rng`"
 
         self.get_fewshot_template()
-        
+
         if num_fewshot == 0:
             labeled_examples = ""
             fewshot_idx, fewshot_target_idx, fewshot_src = ([], [], None)
@@ -200,7 +207,6 @@ class Flores101MT_fewshot_fr2en(Flores101MT):
             # Leave an extra `example_separator` right before the prompt.
             labeled_examples += self.example_separator
 
-            
         prompt = self.doc_to_text(doc)
         ctx = labeled_examples + prompt
         logging_info = {
@@ -220,13 +226,15 @@ class Flores101MT_fewshot_fr2en(Flores101MT):
         _, target = self.shot_prompt_template.apply(doc)
         return target
 
+
 class Flores101MT_fewshot_hi2en(Flores101MT_fewshot_fr2en):
     VERSION = 0
     DATASET_PATH = "gsarti/flores_101"
     DATASET_NAME = "all"
 
     def fewshot_values(self):
-        return 'Hindi', 'English', '{{ sentence_hin }}', '{{ sentence_eng }}'
+        return "Hindi", "English", "{{ sentence_hin }}", "{{ sentence_eng }}"
+
 
 class Flores101MT_fewshot_fr2ar(Flores101MT_fewshot_fr2en):
     VERSION = 0
@@ -234,8 +242,9 @@ class Flores101MT_fewshot_fr2ar(Flores101MT_fewshot_fr2en):
     DATASET_NAME = "all"
 
     def fewshot_values(self):
-        return 'French', 'Arabic', '{{ sentence_fra }}', '{{ sentence_ara }}'
-    
+        return "French", "Arabic", "{{ sentence_fra }}", "{{ sentence_ara }}"
+
+
 class Flores101Perplexity(PerplexityTask):
     """Computes the perplexity for a specific language translation of Flores-101.
 

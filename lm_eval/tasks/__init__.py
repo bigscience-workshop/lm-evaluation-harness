@@ -119,7 +119,7 @@ TASK_REGISTRY = {
     "flores_101_mt_fewshot_fr2en": flores_101.Flores101MT_fewshot_fr2en,
     "flores_101_mt_fewshot_hi2en": flores_101.Flores101MT_fewshot_hi2en,
     "flores_101_mt_fewshot_fr2ar": flores_101.Flores101MT_fewshot_fr2ar,
-   "flores_101_mt_fewshot_wmt_fr2en": flores_101.Flores101MT_fewshot_wmt_fr2en,
+    "flores_101_mt_fewshot_wmt_fr2en": flores_101.Flores101MT_fewshot_wmt_fr2en,
     # Flores101 (Perplexity)
     "flores_101_ppl": flores_101.Flores101Perplexity,
     # GEM/WebNLG
