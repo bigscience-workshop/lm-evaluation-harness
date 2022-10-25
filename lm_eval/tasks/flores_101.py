@@ -69,6 +69,11 @@ class Flores101MT(PromptSourceTask):
 
 
 class Flores101MT_fewshot_wmt_fr2en(Flores101MT):
+    """
+    This task is Identical to the Flores101MT task, except in the few-shot setting
+    where few-shot examples are created using examples from the WMT14 French-to-English
+    development set, whatever the language specified in the prompt.
+    """
     VERSION = 0
     DATASET_PATH = "gsarti/flores_101"
     DATASET_NAME = "all"
@@ -127,6 +132,11 @@ class Flores101MT_fewshot_wmt_fr2en(Flores101MT):
 
 
 class Flores101MT_fewshot_fr2en(Flores101MT):
+    """
+    This task is Identical to the Flores101MT task, except in the few-shot setting
+    where few-shot examples are created using French as the source language and English
+    as the target language, whatever the language specified in the prompt.
+    """
     VERSION = 0
     DATASET_PATH = "gsarti/flores_101"
     DATASET_NAME = "all"
@@ -229,6 +239,11 @@ class Flores101MT_fewshot_fr2en(Flores101MT):
 
 
 class Flores101MT_fewshot_hi2en(Flores101MT_fewshot_fr2en):
+    """
+    This task is Identical to the Flores101MT task, except in the few-shot setting
+    where few-shot examples are created using Hindi as the source language and English
+    as the target language, whatever the language specified in the prompt.
+    """
     VERSION = 0
     DATASET_PATH = "gsarti/flores_101"
     DATASET_NAME = "all"
@@ -238,6 +253,11 @@ class Flores101MT_fewshot_hi2en(Flores101MT_fewshot_fr2en):
 
 
 class Flores101MT_fewshot_fr2ar(Flores101MT_fewshot_fr2en):
+    """
+    This task is Identical to the Flores101MT task, except in the few-shot setting
+    where few-shot examples are created using French as the source language and Arabic
+    as the target language, whatever the language specified in the prompt.
+    """
     VERSION = 0
     DATASET_PATH = "gsarti/flores_101"
     DATASET_NAME = "all"

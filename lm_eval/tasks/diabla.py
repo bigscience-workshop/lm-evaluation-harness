@@ -76,7 +76,13 @@ class DiaBLa(PromptSourceTask):
 
 
 class DiaBLa_1_shot_context(PromptSourceTask):
-
+    """
+    This task is identical to the DiaBLa task, but in the 1-shot setting takes the
+    1-shot example from the previous sentence in the dialogue if this is available
+    (source sentence and MT output, in the same language direction as the direction
+    of the current example). N.B. this task is not currently designed for more than 
+    1-shot.
+    """
     DATASET_PATH = "rbawden/DiaBLa"
     DATASET_NAME = None
 
