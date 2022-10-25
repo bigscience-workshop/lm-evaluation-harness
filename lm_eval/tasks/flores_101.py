@@ -14,7 +14,8 @@ Github: https://github.com/facebookresearch/flores
 from lm_eval.api.task import PromptSourceTask, PerplexityTask
 from typing import List, Tuple, Union, Optional
 import datasets
-import copy, re
+import copy
+import re
 import numpy as np
 import promptsource.templates
 from lm_eval import tasks
