@@ -74,6 +74,7 @@ class Flores101MT_fewshot_wmt_fr2en(Flores101MT):
     where few-shot examples are created using examples from the WMT14 French-to-English
     development set, whatever the language specified in the prompt.
     """
+
     VERSION = 0
     DATASET_PATH = "gsarti/flores_101"
     DATASET_NAME = "all"
@@ -137,6 +138,7 @@ class Flores101MT_fewshot_fr2en(Flores101MT):
     where few-shot examples are created using French as the source language and English
     as the target language, whatever the language specified in the prompt.
     """
+
     VERSION = 0
     DATASET_PATH = "gsarti/flores_101"
     DATASET_NAME = "all"
@@ -244,6 +246,7 @@ class Flores101MT_fewshot_hi2en(Flores101MT_fewshot_fr2en):
     where few-shot examples are created using Hindi as the source language and English
     as the target language, whatever the language specified in the prompt.
     """
+
     VERSION = 0
     DATASET_PATH = "gsarti/flores_101"
     DATASET_NAME = "all"
@@ -258,6 +261,7 @@ class Flores101MT_fewshot_fr2ar(Flores101MT_fewshot_fr2en):
     where few-shot examples are created using French as the source language and Arabic
     as the target language, whatever the language specified in the prompt.
     """
+
     VERSION = 0
     DATASET_PATH = "gsarti/flores_101"
     DATASET_NAME = "all"
