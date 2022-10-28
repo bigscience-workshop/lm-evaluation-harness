@@ -25,6 +25,7 @@ from . import huff_post
 from . import jigsaw_unintended_bias
 from . import lama
 from . import lince
+from . import multi_eurlex
 from . import piaf
 from . import race
 from . import schema_guided_dstc8
@@ -134,6 +135,8 @@ TASK_REGISTRY = {
     # WMT
     # Format: `wmt{year}_{lang1}_{lang2}`
     **wmt.construct_tasks(),
+    # MultiEURLEX
+    "multi_eurlex_mt": multi_eurlex.MultiEURLEXMT,
     # BLiMP
     "blimp_adjunct_island": blimp.BlimpAdjunctIsland,
     "blimp_anaphor_gender_agreement": blimp.BlimpAnaphorGenderAgreement,
@@ -209,10 +212,10 @@ TASK_REGISTRY = {
     # TODO: Not Yet Available in `promptsource/eval-hackathon`
     ########################################################
     # GEM/mlsum
-    # "mlsum_es": gem_mlsum.GEMMLSUMEs,
-    # "mlsum_de": gem_mlsum.GEMMLSUMDe,
-    # "mlsum_es_covid_challenge_set": gem_mlsum.GEMMLSUMEsChallgeTestCovid,
-    # "mlsum_de_covid_challenge_set": gem_mlsum.GEMMLSUMDeChallgeTestCovid,
+    "mlsum_es": gem_mlsum.GEMMLSUMEs,
+    "mlsum_de": gem_mlsum.GEMMLSUMDe,
+    "mlsum_es_covid_challenge_set": gem_mlsum.GEMMLSUMEsChallgeTestCovid,
+    "mlsum_de_covid_challenge_set": gem_mlsum.GEMMLSUMDeChallgeTestCovid,
     # LAMA
     # "bigscience-lama": lama.BigScienceLAMA,
     ########################################################

@@ -180,7 +180,6 @@ def main():
         results = evaluator.cli_evaluate(**evaluate_args)
     else:
         from codecarbon import OfflineEmissionsTracker
-
         with OfflineEmissionsTracker(country_iso_code="FRA", log_level="error"):
             print()  # Add newline between emissions tracker and evaluation logging.
             results = evaluator.cli_evaluate(**evaluate_args)
