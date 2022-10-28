@@ -109,6 +109,7 @@ TASK_REGISTRY = {
     "crd3": crd3.CRD3,
     # DiaBLa
     "diabla": diabla.DiaBLa,
+    "diabla_1_shot_context": diabla.DiaBLa_1_shot_context,
     # XQuAD
     "xquad_en": xquad.XQuADEnglish,
     "xquad_ar": xquad.XQuADArabic,
@@ -116,6 +117,10 @@ TASK_REGISTRY = {
     "piaf": piaf.PIAF,
     # Flores 101 (MT)
     "flores_101_mt": flores_101.Flores101MT,
+    "flores_101_mt_fewshot_fr2en": flores_101.Flores101MT_fewshot_fr2en,
+    "flores_101_mt_fewshot_hi2en": flores_101.Flores101MT_fewshot_hi2en,
+    "flores_101_mt_fewshot_fr2ar": flores_101.Flores101MT_fewshot_fr2ar,
+    "flores_101_mt_fewshot_wmt_fr2en": flores_101.Flores101MT_fewshot_wmt_fr2en,
     # Flores101 (Perplexity)
     "flores_101_ppl": flores_101.Flores101Perplexity,
     # GEM/WebNLG

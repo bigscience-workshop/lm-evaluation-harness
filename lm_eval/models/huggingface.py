@@ -131,20 +131,26 @@ class HuggingFaceAutoLM(TokenLM):
         assert isinstance(pretrained, str)
         assert isinstance(device, str)
         assert isinstance(batch_size, int)
-        if add_special_tokens is not None:
+        if (
+            add_special_tokens is not None
+            and self.AUTO_MODEL_CLASS is transformers.AutoModelForCausalLM
+        ):
             # TODO: Support evaluating causal models with special tokens. Currently,
             # this is not possible because the `_loglikelihood_tokens()` method for
             # causal LMs makes a no-special-tokens assumption given that contexts
             # and labels/continuations are tokenized separately without special
             # tokens, concatenated, and then processed as inputs.
             assert (
-                self.AUTO_MODEL_CLASS is not transformers.AutoModelForCausalLM
+                not add_special_tokens
             ), "Evaluating causal models with `add_special_tokens=True` is currently not supported."
 
         self._batch_size = batch_size  # TODO: Adaptive batch size
         self._max_gen_toks = max_gen_toks
         self._max_length = max_length
-        self._config = self.AUTO_CONFIG_CLASS.from_pretrained(pretrained)
+        self._config = self.AUTO_CONFIG_CLASS.from_pretrained(
+            pretrained,
+            revision=revision + ("/" + subfolder if subfolder is not None else ""),
+        )
 
         self._add_special_tokens = add_special_tokens
         self.tokenizer = self._create_auto_tokenizer(
@@ -438,6 +444,7 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
         new_requests = []
         for chunk in utils.chunks(requests, self.batch_size):
             context, continuation = zip(*chunk)
+
             # Fill empty contexts with the EOT token.
             context = [
                 f"{self.eot_token}" if len(text) == 0 else text for text in context
@@ -445,9 +452,15 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
             context_enc = self.tok_encode_batch(context)
             for key in context_enc:
                 context_enc[key] = context_enc[key][:, -self.max_length :]
+
+            # Remove leading whitespace introduced by the default
+            # `text_target_separator` since the context and continuation
+            # will not be concatenated as a single (decoder) input.
+            continuation = [text.lstrip() for text in continuation]
             continuation_enc = self.tok_encode_batch(list(continuation))
             for key in continuation_enc:
                 continuation_enc[key] = continuation_enc[key][:, -self.max_length :]
+
             new_requests.append(
                 ((context, continuation), context_enc, continuation_enc)
             )
