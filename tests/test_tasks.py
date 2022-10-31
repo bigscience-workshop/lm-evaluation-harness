@@ -132,3 +132,37 @@ def test_documents_and_requests(task_name: str, task_class: Task):
             # TODO: Mock lm after refactoring evaluator.py to not be a mess
             for req in requests:
                 assert isinstance(req, Request)
+
+
+def test_arg_string_task_creation():
+    arg_string = "text_target_separator=\n\n,example_separator=\t,save_examples=False"
+    task = tasks.get_task_list_from_args_string(
+        "wnli",
+        template_names=["confident"],
+        task_args=arg_string,
+    )[0]
+    assert task.example_separator == "\t"
+    assert task.save_examples is False
+
+    with pytest.raises(AssertionError):
+        # Ensure tasks don't instantiate with invalid args.
+        bad_save_examples_arg_string = "example_separator=\t,save_examples=yes"
+        task = tasks.get_task_list_from_args_string(
+            "wnli",
+            template_names=["confident"],
+            task_args=bad_save_examples_arg_string,
+        )[0]
+
+        bad_example_sep_arg_string = "example_separator=False,save_examples=False"
+        task = tasks.get_task_list_from_args_string(
+            "wnli",
+            template_names=["confident"],
+            task_args=bad_example_sep_arg_string,
+        )[0]
+
+        bad_text_sep_arg_string = "text_target_separator=\n\n"
+        task = tasks.get_task_list_from_args_string(
+            "wnli",
+            template_names=["confident"],
+            task_args=bad_text_sep_arg_string,
+        )[0]
