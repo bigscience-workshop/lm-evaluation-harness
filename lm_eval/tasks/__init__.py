@@ -2,9 +2,8 @@ import logging
 from typing import List, Mapping, Tuple, Type, Optional, Union
 from promptsource.templates import DatasetTemplates
 
-from lm_eval.api.task import Task
 import lm_eval.api.utils
-
+from lm_eval.api.task import Task
 
 from . import anli
 from . import blimp

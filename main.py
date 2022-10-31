@@ -34,7 +34,7 @@ def parse_args():
     parser.add_argument(
         "--task_args",
         default="",
-        help="Task constructor args that you'd pass into a task class of kind "
+        help="Optional task constructor args that you'd pass into a task class of kind "
         "`--task_name`. These must be comma-separated keyword args, e.g. "
         "`key1=value1,key2=value2`, with no spaces",
     )

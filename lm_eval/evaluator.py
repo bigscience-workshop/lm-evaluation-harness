@@ -56,9 +56,6 @@ def cli_evaluate(
             under.
         num_fewshot (int, optional, defaults to 0):
             Number of examples in few-shot context.
-        example_separator (str, optional, defaults to None):
-            The string that will be used to separate the few-shot examples
-            from the prompt example.
         batch_size (int, optional, defaults to None):
             Batch size to use for model evaluation.
         device (str, optional, defaults to None):
