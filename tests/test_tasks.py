@@ -160,7 +160,7 @@ def test_arg_string_task_creation():
             task_args=bad_example_sep_arg_string,
         )[0]
 
-        bad_text_sep_arg_string = "text_target_separator=\n\n"
+        bad_text_sep_arg_string = "text_target_separator=___"
         task = tasks.get_task_list_from_args_string(
             "wnli",
             template_names=["confident"],
