@@ -100,6 +100,7 @@ def cli_evaluate(
     results["config"] = {
         "model": model_api_name,
         "model_args": model_args,
+        "task_args": task_args,
         "num_fewshot": num_fewshot,
         "batch_size": batch_size,
         "device": device,
