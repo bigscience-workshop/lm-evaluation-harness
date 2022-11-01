@@ -1,5 +1,6 @@
 import logging
 import pytest
+import numpy as np
 from typing import Optional, Tuple
 from itertools import islice
 from promptsource.templates import Template
@@ -7,7 +8,7 @@ from promptsource.templates import Template
 import lm_eval.tasks as tasks
 from lm_eval.api.task import Task
 from lm_eval.api.request import Request
-from lm_eval.api.utils import set_seed
+from lm_eval.api.utils import set_seed, DEFAULT_SEED
 
 
 logger = logging.getLogger(__name__)
@@ -135,17 +136,48 @@ def test_documents_and_requests(task_name: str, task_class: Task):
 
 
 def test_arg_string_task_creation():
-    arg_string = "text_target_separator=\n\n,example_separator=\t,save_examples=False"
+    TEST_EXAMPLE_SEP = "\n===TEST_SEPARATOR===\n"
+    TEST_TEXT_TARGET_SEP = "   "
+    TEST_ARG_STRING = f" save_examples=False,example_separator={TEST_EXAMPLE_SEP},text_target_separator={TEST_TEXT_TARGET_SEP}"
+
     task = tasks.get_task_list_from_args_string(
         "wnli",
         template_names=["confident"],
-        task_args=arg_string,
+        task_args=TEST_ARG_STRING,
     )[0]
-    assert task.example_separator == "\t"
-    assert task.save_examples is False
 
+    # Ensure parsing properly handles args.
+    assert task.save_examples is False
+    assert task.example_separator == TEST_EXAMPLE_SEP
+    assert task.text_target_separator == TEST_TEXT_TARGET_SEP
+
+    # Ensure fewshot context is formatted as expected.
+    context = task.fewshot_context(
+        task.validation_docs()[0],
+        num_fewshot=2,
+        rng=np.random.default_rng(DEFAULT_SEED),
+    )[0]
+    expected = f"""If it's true that
+The man couldn't lift his son because he was so heavy.
+how confident should I be that
+The man was so heavy.
+very confident or not confident?   not confident
+===TEST_SEPARATOR===
+If it's true that
+As Ollie carried Tommy up the long winding steps, his legs ached.
+how confident should I be that
+Ollie's legs ached.
+very confident or not confident?   very confident
+===TEST_SEPARATOR===
+If it's true that
+The drain is clogged with hair. It has to be cleaned.
+how confident should I be that
+The hair has to be cleaned.
+very confident or not confident?"""
+    assert context == expected
+
+    # Ensure tasks don't instantiate with invalid args.
     with pytest.raises(AssertionError):
-        # Ensure tasks don't instantiate with invalid args.
         bad_save_examples_arg_string = "example_separator=\t,save_examples=yes"
         task = tasks.get_task_list_from_args_string(
             "wnli",

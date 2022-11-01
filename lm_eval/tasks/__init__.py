@@ -295,7 +295,7 @@ def get_task_list_from_args_string(
         template_names: Name of the prompt template from `promptsource` to use
             for this task.
         task_args: A string of comma-separated key=value pairs that will be passed
-            to the task constructor. E.g. "data_dir=./datasets,example_separator='\n\n'"
+            to the task constructor. E.g. "data_dir=./datasets,example_separator=\n\n"
         additional_config: An additional dictionary of key=value pairs that will
             be passed to the task constructor.
 

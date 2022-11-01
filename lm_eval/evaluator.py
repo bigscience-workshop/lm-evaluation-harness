@@ -51,6 +51,7 @@ def cli_evaluate(
         task_args (str):
             String arguments for the task. See:
                 `lm_eval.api.task.get_task_list_from_args_string`
+            WARNING: To avoid parse errors, separators must not contain commas.
         template_names (List[str]):
             List of template names for the specified `task_name` to evaluate
             under.
