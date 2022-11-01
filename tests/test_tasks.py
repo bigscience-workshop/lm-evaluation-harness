@@ -136,22 +136,49 @@ def test_documents_and_requests(task_name: str, task_class: Task):
 
 
 def test_arg_string_task_creation():
+    import itertools
+
+    TEST_EXAMPLE_SEPS = [
+        # Test `=` symbol in value string
+        "\n===TEST_SEPARATOR===\n",
+        # Test whitespace only separators
+        " ",
+        " \t\t  ",
+        "\n\n\n\n",
+        # Test empty string separator
+        "",
+    ]
+    TEST_TEXT_TARGET_SEPS = [
+        # Test whitespace separators
+        "   ",
+        " \t ",
+        "\n\n\n",
+    ]
+
+    # Ensure parsing properly handles args.
+    for example_sep, text_target_sep in itertools.product(
+        TEST_EXAMPLE_SEPS, TEST_TEXT_TARGET_SEPS
+    ):
+        test_arg_string = f" save_examples=False,example_separator={example_sep},text_target_separator={text_target_sep}"
+        task = tasks.get_task_list_from_args_string(
+            "wnli",
+            template_names=["confident"],
+            task_args=test_arg_string,
+        )[0]
+
+        assert task.save_examples is False
+        assert task.example_separator == example_sep
+        assert task.text_target_separator == text_target_sep
+
+    # Ensure fewshot context is formatted as expected.
     TEST_EXAMPLE_SEP = "\n===TEST_SEPARATOR===\n"
     TEST_TEXT_TARGET_SEP = "   "
-    TEST_ARG_STRING = f" save_examples=False,example_separator={TEST_EXAMPLE_SEP},text_target_separator={TEST_TEXT_TARGET_SEP}"
-
+    test_arg_string = f" save_examples=False,example_separator={TEST_EXAMPLE_SEP},text_target_separator={TEST_TEXT_TARGET_SEP}"
     task = tasks.get_task_list_from_args_string(
         "wnli",
         template_names=["confident"],
-        task_args=TEST_ARG_STRING,
+        task_args=test_arg_string,
     )[0]
-
-    # Ensure parsing properly handles args.
-    assert task.save_examples is False
-    assert task.example_separator == TEST_EXAMPLE_SEP
-    assert task.text_target_separator == TEST_TEXT_TARGET_SEP
-
-    # Ensure fewshot context is formatted as expected.
     context = task.fewshot_context(
         task.validation_docs()[0],
         num_fewshot=2,
