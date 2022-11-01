@@ -34,9 +34,11 @@ def parse_args():
     parser.add_argument(
         "--task_args",
         default="",
-        help="Optional task constructor args that you'd pass into a task class of kind "
-        "`--task_name`. These must be comma-separated keyword args, e.g. "
-        "`key1=value1,key2=value2`, with no spaces",
+        help="""Optional task constructor args that you'd pass into a task class of kind "
+        `--task_name`. These must be comma-separated keyword args, e.g.
+        `key1=value1,key2=value2`, with no spaces.
+        WARNING: To avoid parsing errors, ensure your strings are quoted. For example,
+        example_separator='\\n+++\\n'. Separators must not contain commas.""",
     )
     parser.add_argument(
         "--template_names",
