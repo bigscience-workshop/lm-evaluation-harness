@@ -147,6 +147,10 @@ def test_arg_string_task_creation():
         "\n\n\n\n",
         # Test empty string separator
         "",
+        # Test misc. symbols in separator
+        "[[[[]]]]",
+        "<<___>>",
+        "(())",
     ]
     TEST_TEXT_TARGET_SEPS = [
         # Test whitespace separators
