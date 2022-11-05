@@ -55,11 +55,15 @@ class Flores101MT(PromptSourceTask):
         return False
 
     def has_validation_docs(self):
-        return False
+        return True
 
     def has_test_docs(self):
         return True
 
+    def valid_docs(self):
+        if self.has_valid_docs():
+            return self.dataset["dev"]
+    
     def test_docs(self):
         if self.has_test_docs():
             return self.dataset["devtest"]
@@ -132,6 +136,26 @@ class Flores101MT_fewshot_wmt_fr2en(Flores101MT):
         )["validation"]
 
 
+class Flores101MT_fewshot_wmt_hi2en(Flores101MT_fewshot_wmt_fr2en):
+    """
+    This task is Identical to the Flores101MT task, except in the few-shot setting
+    where few-shot examples are created using examples from the WMT14 Hindi-to-English
+    development set, whatever the language specified in the prompt.
+    """
+
+    VERSION = 0
+    DATASET_PATH = "gsarti/flores_101"
+    DATASET_NAME = "all"
+
+    def fewshot_docs(self) -> datasets.Dataset:
+        """Returns a wmt dataset split"""
+        return datasets.load_dataset(
+            "wmt14",
+            "hi-en",
+            cache_dir=self.cache_dir,
+            download_mode=self.download_mode,
+        )["validation"]
+    
 class Flores101MT_fewshot_fr2en(Flores101MT):
     """
     This task is Identical to the Flores101MT task, except in the few-shot setting
@@ -270,6 +294,20 @@ class Flores101MT_fewshot_fr2ar(Flores101MT_fewshot_fr2en):
         return "French", "Arabic", "{{ sentence_fra }}", "{{ sentence_ara }}"
 
 
+class Flores101MT_fewshot_en2bn(Flores101MT_fewshot_fr2en):
+    """
+    This task is Identical to the Flores101MT task, except in the few-shot setting
+    where few-shot examples are created using French as the source language and Arabic
+    as the target language, whatever the language specified in the prompt.
+    """
+
+    VERSION = 0
+    DATASET_PATH = "gsarti/flores_101"
+    DATASET_NAME = "all"
+
+    def fewshot_values(self):
+        return "English", "Bengali", "{{ sentence_eng }}", "{{ sentence_ben }}"
+    
 class Flores101Perplexity(PerplexityTask):
     """Computes the perplexity for a specific language translation of Flores-101.
 
