@@ -254,9 +254,14 @@ class PromptSourceTask(Task):
                 Example:
                     Q: Where is the Eiffel Tower located? A:{text_target_separator}Paris
         """
+        assert isinstance(save_examples, bool), "`save_examples` must be a bool."
+        assert isinstance(example_separator, str) and isinstance(
+            text_target_separator, str
+        ), "Separator args must be strings."
         assert (
             text_target_separator.isspace()
         ), f"`text_target_separator` must be whitespace only. Got: `{text_target_separator}`"
+
         super().__init__(data_dir, cache_dir, download_mode)
         self.prompt_template = prompt_template
         self.save_examples = save_examples
@@ -355,7 +360,12 @@ class PromptSourceTask(Task):
         for idx in random_indices:
             if i >= k:  # Break when we have enough examples.
                 break
-            if self.invalid_doc_for_prompt(docs[idx]) or docs[idx] == prompt:
+            is_same_prompt = prompt is not None and all(
+                # Skips the `doc_id` key assigned to `prompt`s during eval pre-processing.
+                docs[idx][k] == prompt[k]
+                for k in docs[idx].keys()
+            )
+            if self.invalid_doc_for_prompt(docs[idx]) or is_same_prompt:
                 continue
             fewshot_examples.append(docs[idx])
             fewshot_idx.append(int(idx))

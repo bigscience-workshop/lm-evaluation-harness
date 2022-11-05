@@ -60,10 +60,10 @@ class Flores101MT(PromptSourceTask):
     def has_test_docs(self):
         return True
 
-    def valid_docs(self):
-        if self.has_valid_docs():
+    def validation_docs(self):
+        if self.has_validation_docs():
             return self.dataset["dev"]
-    
+
     def test_docs(self):
         if self.has_test_docs():
             return self.dataset["devtest"]
@@ -331,11 +331,15 @@ class Flores101Perplexity(PerplexityTask):
         return True
 
     def has_test_docs(self):
-        return False
+        return True
 
     def validation_docs(self):
         if self.has_validation_docs():
             return self.dataset["dev"]
+
+    def test_docs(self):
+        if self.has_test_docs():
+            return self.dataset["devtest"]
 
     def doc_to_target(self, doc):
         """This is a null prompt task. We need to get the target from the doc."""
