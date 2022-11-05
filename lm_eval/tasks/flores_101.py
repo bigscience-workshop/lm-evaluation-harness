@@ -128,12 +128,15 @@ class Flores101MT_fewshot_wmt_fr2en(Flores101MT):
 
     def fewshot_docs(self) -> datasets.Dataset:
         """Returns a wmt dataset split"""
-        return 'valid', datasets.load_dataset(
-            "wmt14",
-            "fr-en",
-            cache_dir=self.cache_dir,
-            download_mode=self.download_mode,
-        )["validation"]["translation"]
+        return (
+            "valid",
+            datasets.load_dataset(
+                "wmt14",
+                "fr-en",
+                cache_dir=self.cache_dir,
+                download_mode=self.download_mode,
+            )["validation"]["translation"],
+        )
 
     def fewshot_context(
         self, doc: dict, num_fewshot: int, rng: Optional[np.random.Generator]
@@ -165,7 +168,7 @@ class Flores101MT_fewshot_wmt_fr2en(Flores101MT):
         else:
             # Construct few-shot labeled examples.
             fewshot_src, fewshot_docs = self.fewshot_docs()
-            
+
             fewshot_examples, fewshot_idx = self.fewshot_examples(
                 fewshot_docs, k=num_fewshot, rng=rng, prompt=doc
             )
@@ -265,19 +268,18 @@ class Flores101MT_fewshot_wmt_fr2en(Flores101MT):
                 break
             is_same_prompt = False
             # is never same prompt with this task
-            #is_same_prompt = prompt is not None and all(
+            # is_same_prompt = prompt is not None and all(
             #    # Skips the `doc_id` key assigned to `prompt`s during eval pre-processing.
             #    docs[idx][k] == prompt[k]
             #    for k in docs[idx].keys()
-            #)
-            
+            # )
+
             if self.invalid_doc_for_prompt(docs[idx]) or is_same_prompt:
                 continue
             fewshot_examples.append(docs[idx])
             fewshot_idx.append(int(idx))
             i += 1
         return fewshot_examples, fewshot_idx
-
 
 
 class Flores101MT_fewshot_wmt_hi2en(Flores101MT_fewshot_wmt_fr2en):
@@ -293,13 +295,14 @@ class Flores101MT_fewshot_wmt_hi2en(Flores101MT_fewshot_wmt_fr2en):
 
     def fewshot_docs(self) -> datasets.Dataset:
         """Returns a wmt dataset split"""
-        return 'valid', datasets.load_dataset(
+        return "valid", datasets.load_dataset(
             "wmt14",
             "hi-en",
             cache_dir=self.cache_dir,
             download_mode=self.download_mode,
         )["validation"]
-    
+
+
 class Flores101MT_fewshot_fr2en(Flores101MT):
     """
     This task is Identical to the Flores101MT task, except in the few-shot setting
@@ -451,7 +454,8 @@ class Flores101MT_fewshot_en2bn(Flores101MT_fewshot_fr2en):
 
     def fewshot_values(self):
         return "English", "Bengali", "{{ sentence_eng }}", "{{ sentence_ben }}"
-    
+
+
 class Flores101Perplexity(PerplexityTask):
     """Computes the perplexity for a specific language translation of Flores-101.
 
