@@ -109,7 +109,9 @@ TASK_REGISTRY = {
     "crd3": crd3.CRD3,
     # DiaBLa
     "diabla": diabla.DiaBLa,
-    "diabla_1_shot_context": diabla.DiaBLa_1_shot_context,
+    "diabla_1_shot_context_orig": diabla.DiaBLa_1_shot_context_orig,
+    "diabla_1_shot_context_same": diabla.DiaBLa_1_shot_context_same,
+    "diabla_1_shot_context_opposite": diabla.DiaBLa_1_shot_context_opposite,
     # XQuAD
     "xquad_en": xquad.XQuADEnglish,
     "xquad_ar": xquad.XQuADArabic,
