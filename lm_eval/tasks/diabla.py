@@ -19,7 +19,7 @@ versions and reference translations produced a posteriori
 Homepage: http://almanach.inria.fr/software_and_resources/custom/DiaBLa-en.html
 """
 from lm_eval.api.task import PromptSourceTask
-from typing import List, Tuple, Union, Optional
+from typing import List, Tuple, Optional
 import datasets
 import copy
 import numpy as np
@@ -255,9 +255,6 @@ class DiaBLa_1_shot_context_opposite(DiaBLa_1_shot_context_same):
             '{% if utterance_meta.lang == "french" %}',
             '{% if utterance_meta.lang != "french" %}',
         )
-        import pdb
-
-        pdb.set_trace()
         return self.shot_prompt_template
 
 

@@ -12,7 +12,7 @@ FLORES-101 is a Many-to-Many multilingual translation benchmark dataset for 101 
 Github: https://github.com/facebookresearch/flores
 """
 from lm_eval.api.task import PromptSourceTask, PerplexityTask
-from typing import List, Tuple, Union, Optional
+from typing import List, Tuple, Optional
 import datasets
 import copy
 import re
@@ -229,7 +229,6 @@ class Flores101MT_fewshot_wmt_fr2en(Flores101MT):
             (src_sent, new_src_sent),
             (trg_sent, new_trg_sent),
         ]:
-            print(old_text, new_text)
             self.shot_prompt_template.jinja = self.shot_prompt_template.jinja.replace(
                 old_text, new_text
             )
