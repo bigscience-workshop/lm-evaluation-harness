@@ -295,12 +295,15 @@ class Flores101MT_fewshot_wmt_hi2en(Flores101MT_fewshot_wmt_fr2en):
 
     def fewshot_docs(self) -> datasets.Dataset:
         """Returns a wmt dataset split"""
-        return "valid", datasets.load_dataset(
-            "wmt14",
-            "hi-en",
-            cache_dir=self.cache_dir,
-            download_mode=self.download_mode,
-        )["validation"]
+        return (
+            "valid",
+            datasets.load_dataset(
+                "wmt14",
+                "hi-en",
+                cache_dir=self.cache_dir,
+                download_mode=self.download_mode,
+            )["validation"],
+        )
 
 
 class Flores101MT_fewshot_fr2en(Flores101MT):

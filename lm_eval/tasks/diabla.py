@@ -251,11 +251,16 @@ class DiaBLa_1_shot_context_opposite(DiaBLa_1_shot_context_same):
         preamble += "{% if dialogue_history|length > 0 %}{% if utterance_meta.lang != dialogue_history[-1].utterance_meta.lang %}{% set src_sent = dialogue_history[-1].orig %}{% set trg_sent = dialogue_history[-1].ref %}{% else %}{% set src_sent = dialogue_history[-1].ref %}{% set trg_sent = dialogue_history[-1].orig %}{% endif %}{% endif %}"
         self.shot_prompt_template.jinja = preamble + old_jinja.replace(
             "{{ orig }}", "{{ src_sent }}"
-        ).replace("{{ ref }}", "{{ trg_sent }}").replace('{% if utterance_meta.lang == "french" %}', '{% if utterance_meta.lang != "french" %}')
-        import pdb; pdb.set_trace()
+        ).replace("{{ ref }}", "{{ trg_sent }}").replace(
+            '{% if utterance_meta.lang == "french" %}',
+            '{% if utterance_meta.lang != "french" %}',
+        )
+        import pdb
+
+        pdb.set_trace()
         return self.shot_prompt_template
 
-    
+
 class DiaBLa_1_shot_context_orig(DiaBLa_1_shot_context_same):
     """
     This task is identical to the DiaBLa task, but in the 1-shot setting takes the
@@ -277,6 +282,7 @@ class DiaBLa_1_shot_context_orig(DiaBLa_1_shot_context_same):
         preamble += "{% if dialogue_history|length > 0 %}{% set src_sent = dialogue_history[-1].orig %}{% set trg_sent = dialogue_history[-1].ref %}{% endif %}"
         self.shot_prompt_template.jinja = preamble + old_jinja.replace(
             "{{ orig }}", "{{ src_sent }}"
-        ).replace("{{ ref }}", "{{ trg_sent }}").replace('utterance_meta.lang', 'dialogue_history[-1].utterance_meta.lang')
+        ).replace("{{ ref }}", "{{ trg_sent }}").replace(
+            "utterance_meta.lang", "dialogue_history[-1].utterance_meta.lang"
+        )
         return self.shot_prompt_template
-
