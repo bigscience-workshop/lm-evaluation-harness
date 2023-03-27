@@ -35,6 +35,7 @@ from . import superglue
 from . import tydiqa
 from . import wino_bias
 from . import wmt
+from . import xnli
 from . import xquad
 
 
@@ -117,6 +118,22 @@ TASK_REGISTRY = {
     # XQuAD
     "xquad_en": xquad.XQuADEnglish,
     "xquad_ar": xquad.XQuADArabic,
+    # XNLI
+    "xnli_en": xnli.XNLIEn,
+    "xnli_fr": xnli.XNLIFr,
+    "xnli_es": xnli.XNLIEs,
+    "xnli_de": xnli.XNLIDe,
+    "xnli_el": xnli.XNLIEl,
+    "xnli_bg": xnli.XNLIBg,
+    "xnli_ru": xnli.XNLIRu,
+    "xnli_tr": xnli.XNLITr,
+    "xnli_ar": xnli.XNLIAr,
+    "xnli_vi": xnli.XNLIVi,
+    "xnli_th": xnli.XNLITh,
+    "xnli_zh": xnli.XNLIZh,
+    "xnli_hi": xnli.XNLIHi,
+    "xnli_sw": xnli.XNLISw,
+    "xnli_ur": xnli.XNLIUr,
     # PIAF
     "piaf": piaf.PIAF,
     # Flores 101 (MT)
