@@ -1,7 +1,9 @@
+import os
 import math
 import torch
 import torch.nn.functional as F
 import transformers
+import deepspeed
 from typing import List, Mapping, NewType, Optional, Tuple, Union
 from tqdm import tqdm
 
@@ -77,6 +79,7 @@ class HuggingFaceAutoLM(TokenLM):
         offload_folder: Optional[str] = "./offload",
         dtype: Optional[Union[str, torch.dtype]] = None,
         device: Optional[Union[int, str]] = "cuda",
+        use_deepspeed: Optional[bool] = False
     ):
         """Initializes a HuggingFace `AutoModel` and `AutoTokenizer` for evaluation.
 
@@ -147,6 +150,7 @@ class HuggingFaceAutoLM(TokenLM):
         self._batch_size = batch_size  # TODO: Adaptive batch size
         self._max_gen_toks = max_gen_toks
         self._max_length = max_length
+        self.use_deepspeed = use_deepspeed
         self._config = self.AUTO_CONFIG_CLASS.from_pretrained(
             pretrained,
             revision=revision + ("/" + subfolder if subfolder is not None else ""),
@@ -185,7 +189,7 @@ class HuggingFaceAutoLM(TokenLM):
             # the user specified one so we force `self._device` to be the same as
             # `lm_head`'s.
             self._device = self.model.hf_device_map["lm_head"]
-        if not use_accelerate:
+        if not use_accelerate and not use_deepspeed:
             self.model.to(self._device)
 
     def _create_auto_model(
@@ -199,15 +203,38 @@ class HuggingFaceAutoLM(TokenLM):
         offload_folder: Optional[str] = None,
         torch_dtype: Optional[Union[str, torch.dtype]] = None,
     ) -> transformers.AutoModel:
-        """Returns a pre-trained pytorch model from a pre-trained model configuration."""
-        model = self.AUTO_MODEL_CLASS.from_pretrained(
-            pretrained,
-            revision=revision + ("/" + subfolder if subfolder is not None else ""),
-            device_map=device_map,
-            max_memory=max_memory,
-            offload_folder=offload_folder,
-            torch_dtype=torch_dtype,
-        )
+        if self.use_deepspeed:
+            # Deepspeed iniatilization
+            world_size = int(os.getenv("WORLD_SIZE", "1"))
+            deepspeed.init_distributed("nccl")
+
+            with deepspeed.OnDevice(dtype=torch.float16, device="meta"):
+                model = self.AUTO_MODEL_CLASS.from_config(self._config, torch_dtype=torch.bfloat16)
+
+            model = model.eval()
+            checkpoints_json = os.path.join(pretrained, "ds_inference_config.json")
+            tp_config = deepspeed.inference.config.DeepSpeedTPConfig()
+            tp_config.tp_size = world_size
+
+            model = deepspeed.init_inference(
+                model,
+                tensor_parallel=tp_config,
+                base_dir=pretrained,
+                dtype=torch_dtype,
+                checkpoint=checkpoints_json,
+                replace_with_kernel_inject=True,
+
+            )
+        else:
+            """Returns a pre-trained pytorch model from a pre-trained model configuration."""
+            model = self.AUTO_MODEL_CLASS.from_pretrained(
+                pretrained,
+                revision=revision + ("/" + subfolder if subfolder is not None else ""),
+                device_map=device_map,
+                max_memory=max_memory,
+                offload_folder=offload_folder,
+                torch_dtype=torch_dtype,
+            )
         return model
 
     def _create_auto_tokenizer(

@@ -103,6 +103,13 @@ def parse_args():
         action="store_true",
         help="Whether to cache your model's predictions or not",
     )
+    # Need it for deepspeed inference
+    parser.add_argument(
+        "--local_rank",
+        default=0,
+        type=int,
+        help="used by dist launchers"
+    )
     return parser.parse_args()
 
 
@@ -204,9 +211,10 @@ def main():
     with open(f"./outputs/slim{path_separator}{output_path}.json", "w") as f:
         json.dump(agg2slim(results), f, indent=2)
 
-    print(f"\n{evaluator.make_table(results)}")
+    if args.local_rank == 0:
+        print(f"\n{evaluator.make_table(results)}")
 
-    if not args.no_tracking:
+    if not args.no_tracking and args.local_rank == 0:
         emissions_output_path = f"./outputs/emissions{path_separator}{output_path}.csv"
         os.rename("emissions.csv", emissions_output_path)
 
